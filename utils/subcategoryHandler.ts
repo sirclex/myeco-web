@@ -1,7 +1,5 @@
 import axios from "axios";
 
-const api_url = "http://127.0.0.1:8000";
-
 interface SubcategoryDisplay {
     id: number;
     name: string;
@@ -9,11 +7,17 @@ interface SubcategoryDisplay {
 }
 
 async function fetchSubcategory(category_id: number) {
-    const response = await axios.get(api_url + "/subcategories", {
-        params: {
-            category_id: category_id,
-        },
-    });
+    const response = await axios.get(
+        process.env.NEXT_PUBLIC_API_URL + "/subcategories",
+        {
+            headers: {
+                Authorization: `Bearer ${process.env.NEXT_PUBLIC_API_KEY}`,
+            },
+            params: {
+                category_id: category_id,
+            },
+        }
+    );
     return response.data;
 }
 

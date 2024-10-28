@@ -1,14 +1,18 @@
 import axios from "axios"
 
-const api_url = "http://127.0.0.1:8000"
-
 interface WalletDisplay {
     id: number;
     name: string;
 }
 
 async function fetchWalletInfo() {
-    const response = await axios.get(api_url + "/wallets")
+    const response = await axios.get(process.env.NEXT_PUBLIC_API_URL + "/wallets",
+        {
+            headers: {
+                "Authorization": `Bearer ${process.env.NEXT_PUBLIC_API_KEY}`
+            }
+        }
+    )
     return response.data
 }
 

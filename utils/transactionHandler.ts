@@ -1,7 +1,5 @@
 import axios from "axios";
 
-const api_url = "http://127.0.0.1:8000";
-
 interface TransactionModel {
     issue_date: string,
     wallet_id: number,
@@ -35,7 +33,7 @@ interface DebtModel {
 async function addTransactionWithDebt(transactionModel: TransactionModel, debtModels: DebtModel[]) {
     axios({
         method: "post",
-        url: api_url + "/transaction/create",
+        url: process.env.NEXT_PUBLIC_API_URL + "/transaction/create",
         data: {
             transaction: transactionModel,
             debts: debtModels
@@ -44,7 +42,13 @@ async function addTransactionWithDebt(transactionModel: TransactionModel, debtMo
 }
 
 async function getTransactions() {
-    const response = await axios.get(api_url + "/transactions")
+    const response = await axios.get(process.env.NEXT_PUBLIC_API_URL + "/transactions",
+        {
+            headers: {
+                "Authorization": `Bearer ${process.env.NEXT_PUBLIC_API_KEY}`
+            }
+        }
+    )
     return response.data
 }
 

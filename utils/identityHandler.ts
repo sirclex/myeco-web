@@ -1,14 +1,18 @@
 import axios from "axios";
 
-const api_url = "http://127.0.0.1:8000";
-
 interface IdentityDisplay {
     id: number;
     name: string;
 }
 
 async function fetchIdentityList() {
-    const response = await axios.get(api_url + "/identities");
+    const response = await axios.get(process.env.NEXT_PUBLIC_API_URL + "/identities",
+        {
+            headers: {
+                "Authorization": `Bearer ${process.env.NEXT_PUBLIC_API_KEY}`
+            }
+        }
+    );
     let result: IdentityDisplay[] = [];
 
     // @ts-ignore

@@ -18,6 +18,7 @@ interface TransactionDisplay {
     amount: number,
     category: string,
     subcategory: string,
+    detail: string,
     status_id: number
 }
 

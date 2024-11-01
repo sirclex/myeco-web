@@ -78,7 +78,7 @@ export default function CreateTransaction() {
         debts: [],
     });
 
-    // @ts-expect-error
+    // @ts-expect-error: I know, I know
     const handleChange = (event) => {
         const { name, value, type, checked } = event.target;
         setTransaction({
@@ -87,7 +87,7 @@ export default function CreateTransaction() {
         });
     };
 
-    // @ts-expect-error
+    // @ts-expect-error: I know, I know
     const handleWalletChange = (event, newValue) => {
         setTransaction({
             ...transaction,
@@ -95,7 +95,7 @@ export default function CreateTransaction() {
         });
     };
 
-    // @ts-expect-error
+    // @ts-expect-error: I know, I know
     const handleCategoryChange = (event, newValue) => {
         setTransaction({
             ...transaction,
@@ -107,7 +107,7 @@ export default function CreateTransaction() {
         });
     };
 
-    // @ts-expect-error
+    // @ts-expect-error: I know, I know
     const handleSubcategoryChange = (event, newValue) => {
         setTransaction({
             ...transaction,
@@ -115,10 +115,10 @@ export default function CreateTransaction() {
         });
     };
 
-    // @ts-expect-error
+    // @ts-expect-error: I know, I know
     const handleDebtChange = (index, event) => {
         const { name, value, type, checked } = event.target;
-        let newDebts = transaction.debts;
+        const newDebts = transaction.debts;
         newDebts[index] = {
             ...newDebts[index],
             [name]: type === "checkbox" ? checked : value,
@@ -145,10 +145,9 @@ export default function CreateTransaction() {
         });
     };
 
-    // @ts-expect-error
-    const handleDeleteDebt = (index, event) => {
-        let newDebts = transaction.debts;
-        console.log(index)
+    // @ts-expect-error: I know, I know
+    const handleDeleteDebt = (index) => {
+        const newDebts = transaction.debts;
         newDebts.splice(index, 1)
         setTransaction({
             ...transaction,
@@ -156,9 +155,9 @@ export default function CreateTransaction() {
         });
     }
 
-    // @ts-expect-error
-    const handleIdentityChange = (index: number, event, newValue) => {
-        let newDebts = transaction.debts;
+    // @ts-expect-error: I know, I know
+    const handleIdentityChange = (index: number, newValue) => {
+        const newDebts = transaction.debts;
         newDebts[index] = {
             ...newDebts[index],
             identity: newValue,
@@ -173,10 +172,10 @@ export default function CreateTransaction() {
         router.push("/transaction")
     }
 
-    // @ts-expect-error
+    // @ts-expect-error: I know, I know
     const handleSubmit = (event) => {
         event.preventDefault();
-        let transactionModel: TransactionModel = {
+        const transactionModel: TransactionModel = {
             issue_date: transaction.time,
             wallet_id: transaction.wallet.id,
             in_out: transaction.in_out,
@@ -186,9 +185,9 @@ export default function CreateTransaction() {
             detail: transaction.detail,
             status_id: 2
         }
-        let debtModels:DebtModel[] = []
+        const debtModels:DebtModel[] = []
         transaction.debts.forEach((element) => {
-            let debt:DebtModel = {
+            const debt:DebtModel = {
                 transaction_id: 0,
                 in_out: element.in_out,
                 amount: element.amount,
@@ -300,7 +299,7 @@ export default function CreateTransaction() {
                                                 option.name
                                             }
                                             onChange={(e, newValue) =>
-                                                handleIdentityChange(index, e, newValue)
+                                                handleIdentityChange(index, newValue)
                                             }
                                             value={debt.identity}
                                             renderInput={(params) => (
@@ -351,7 +350,7 @@ export default function CreateTransaction() {
                                         <Button type="button" sx={{color: "#ef5350", '&:hover': {
                                             backgroundColor: "#ffe6e6"
                                         }}}
-                                        onClick={(e) => handleDeleteDebt(index, e)}
+                                        onClick={() => handleDeleteDebt(index)}
                                         >
                                         Delete Debt
                                     </Button>

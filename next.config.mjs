@@ -1,4 +1,7 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {};
+const nextConfig = {
+    basePath: '/myeco',
+    reactStrictMode: true
+};
 
 export default nextConfig;

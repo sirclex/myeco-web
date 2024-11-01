@@ -19,7 +19,7 @@ import {
     TransactionDisplay,
 } from "@/utils/transactionHandler";
 import Grid from "@mui/material/Grid2";
-import { Button, Checkbox, Chip } from "@mui/material";
+import { Button, Checkbox, Chip, Divider } from "@mui/material";
 import {
     DashboardOutlined,
     ReceiptLongOutlined,
@@ -88,7 +88,7 @@ const COLUMN_GRID_SIZE = [
     1.25, // Wallet
     1, // Category
     1, // Subcategory
-    2, // Detail
+    3, // Detail
     1, // Status
 ];
 
@@ -219,7 +219,8 @@ export default function PermanentDrawerLeft() {
                         </Button>
                     </Toolbar>
                     <Box>
-                        <Grid container spacing={4} alignItems="center">
+                        <Divider />
+                        <Grid container spacing={4} alignItems="center" bgcolor={"#EDF8FD"}>
                             <Grid size={COLUMN_GRID_SIZE[0]}>
                                 <Checkbox />
                             </Grid>
@@ -248,50 +249,59 @@ export default function PermanentDrawerLeft() {
                                 <Typography></Typography>
                             </Grid>
                         </Grid>
+                        <Divider />
 
                         {transactions.map((record, index) => (
-                            <Grid
-                                container
-                                spacing={4}
-                                alignItems="center"
-                                key={index}
-                            >
-                                <Grid size={COLUMN_GRID_SIZE[0]}>
-                                    <Checkbox />
+                            <Box key={index}>
+                                <Grid
+                                    container
+                                    spacing={4}
+                                    alignItems="center"
+                                >
+                                    <Grid size={COLUMN_GRID_SIZE[0]}>
+                                        <Checkbox />
+                                    </Grid>
+                                    <Grid size={COLUMN_GRID_SIZE[1]}>
+                                        <Typography>
+                                            {record.issue_date}
+                                        </Typography>
+                                    </Grid>
+                                    <Grid size={COLUMN_GRID_SIZE[2]}>
+                                        <Typography>
+                                            {record.in_out == true
+                                                ? "+ "
+                                                : "- "}
+                                            {Intl.NumberFormat("vi-VN", {
+                                                style: "currency",
+                                                currency: "VND",
+                                            }).format(record.amount)}
+                                        </Typography>
+                                    </Grid>
+                                    <Grid size={COLUMN_GRID_SIZE[3]}>
+                                        <Typography>{record.wallet}</Typography>
+                                    </Grid>
+                                    <Grid size={COLUMN_GRID_SIZE[4]}>
+                                        <Typography>
+                                            {record.category}
+                                        </Typography>
+                                    </Grid>
+                                    <Grid size={COLUMN_GRID_SIZE[5]}>
+                                        <Typography>
+                                            {record.subcategory}
+                                        </Typography>
+                                    </Grid>
+                                    <Grid size={COLUMN_GRID_SIZE[6]}>
+                                        <Typography>{record.detail}</Typography>
+                                    </Grid>
+                                    <Grid size={COLUMN_GRID_SIZE[7]}>
+                                        {renderStatus(record.status_id)}
+                                    </Grid>
+                                    <Grid size={COLUMN_GRID_SIZE[8]}>
+                                        <Typography></Typography>
+                                    </Grid>
                                 </Grid>
-                                <Grid size={COLUMN_GRID_SIZE[1]}>
-                                    <Typography>{record.issue_date}</Typography>
-                                </Grid>
-                                <Grid size={COLUMN_GRID_SIZE[2]}>
-                                    <Typography>
-                                        {record.in_out == true ? "+ " : "- "}
-                                        {Intl.NumberFormat("vi-VN", {
-                                            style: "currency",
-                                            currency: "VND",
-                                        }).format(record.amount)}
-                                    </Typography>
-                                </Grid>
-                                <Grid size={COLUMN_GRID_SIZE[3]}>
-                                    <Typography>{record.wallet}</Typography>
-                                </Grid>
-                                <Grid size={COLUMN_GRID_SIZE[4]}>
-                                    <Typography>{record.category}</Typography>
-                                </Grid>
-                                <Grid size={COLUMN_GRID_SIZE[5]}>
-                                    <Typography>
-                                        {record.subcategory}
-                                    </Typography>
-                                </Grid>
-                                <Grid size={COLUMN_GRID_SIZE[6]}>
-                                    <Typography>{record.detail}</Typography>
-                                </Grid>
-                                <Grid size={COLUMN_GRID_SIZE[7]}>
-                                    {renderStatus(record.status_id)}
-                                </Grid>
-                                <Grid size={COLUMN_GRID_SIZE[8]}>
-                                    <Typography></Typography>
-                                </Grid>
-                            </Grid>
+                                <Divider />
+                            </Box>
                         ))}
                     </Box>
                 </Box>

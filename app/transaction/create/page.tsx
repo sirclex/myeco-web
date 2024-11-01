@@ -1,5 +1,5 @@
 "use client";
-import {DateTime} from "luxon"
+import { DateTime } from "luxon";
 import Grid from "@mui/material/Grid2";
 
 import { useRouter } from "next/navigation";
@@ -13,12 +13,24 @@ import {
     TextField,
     Typography,
 } from "@mui/material";
+
+import { LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterLuxon } from "@mui/x-date-pickers/AdapterLuxon";
+import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
+
 import { useEffect, useState } from "react";
 import { fetchWalletInfo, WalletDisplay } from "@/utils/walletHandler";
 import { fetchCategory, CategoryDisplay } from "@/utils/categoryHandler";
-import { fetchSubcategory, SubcategoryDisplay } from "@/utils/subcategoryHandler";
+import {
+    fetchSubcategory,
+    SubcategoryDisplay,
+} from "@/utils/subcategoryHandler";
 import { fetchIdentityList, IdentityDisplay } from "@/utils/identityHandler";
-import { addTransactionWithDebt, TransactionModel, DebtModel } from "@/utils/transactionHandler";
+import {
+    addTransactionWithDebt,
+    TransactionModel,
+    DebtModel,
+} from "@/utils/transactionHandler";
 
 interface Debt {
     in_out: boolean;
@@ -29,7 +41,7 @@ interface Debt {
 }
 
 interface Transaction {
-    time: string;
+    time: DateTime;
     wallet: WalletDisplay;
     in_out: boolean;
     amount: number;
@@ -41,10 +53,12 @@ interface Transaction {
 }
 
 export default function CreateTransaction() {
-    const router = useRouter()
+    const router = useRouter();
     const [walletList, setWalletList] = useState<WalletDisplay[]>([]);
     const [categoryList, setCategoryList] = useState<CategoryDisplay[]>([]);
-    const [subcategoryList, setSubcategoryList] = useState<SubcategoryDisplay[]>([]);
+    const [subcategoryList, setSubcategoryList] = useState<
+        SubcategoryDisplay[]
+    >([]);
     const [identityList, setIdentityList] = useState<IdentityDisplay[]>([]);
 
     useEffect(() => {
@@ -61,13 +75,8 @@ export default function CreateTransaction() {
         });
     }, []);
 
-    const getCurrentDatetime = () => {
-        const now = DateTime.now().setZone("system").toString();
-        return now.slice(0, 16);
-    };
-
     const [transaction, setTransaction] = useState<Transaction>({
-        time: getCurrentDatetime(),
+        time: DateTime.now(),
         wallet: { id: -1, name: "" },
         in_out: false,
         amount: 0,
@@ -148,12 +157,12 @@ export default function CreateTransaction() {
     // @ts-expect-error: I know, I know
     const handleDeleteDebt = (index) => {
         const newDebts = transaction.debts;
-        newDebts.splice(index, 1)
+        newDebts.splice(index, 1);
         setTransaction({
             ...transaction,
             debts: newDebts,
         });
-    }
+    };
 
     // @ts-expect-error: I know, I know
     const handleIdentityChange = (index: number, newValue) => {
@@ -169,56 +178,69 @@ export default function CreateTransaction() {
     };
 
     const handleBack = () => {
-        router.push("/transaction")
-    }
+        router.push("/transaction");
+    };
 
     // @ts-expect-error: I know, I know
     const handleSubmit = (event) => {
         event.preventDefault();
         const transactionModel: TransactionModel = {
-            issue_date: transaction.time,
+            issue_date: transaction.time.toString().slice(0, 16),
             wallet_id: transaction.wallet.id,
             in_out: transaction.in_out,
             amount: transaction.amount,
             category_id: transaction.category.id,
             subcategory_id: transaction.subcategory.id,
             detail: transaction.detail,
-            status_id: 2
-        }
-        const debtModels:DebtModel[] = []
+            status_id: 2,
+        };
+        const debtModels: DebtModel[] = [];
         transaction.debts.forEach((element) => {
-            const debt:DebtModel = {
+            const debt: DebtModel = {
                 transaction_id: 0,
                 in_out: element.in_out,
                 amount: element.amount,
                 identity_id: element.identity.id,
                 detail: element.detail,
-                status_id: element.is_done ? 2 : 1
-            }
-            debtModels.push(debt)
-        })
-        debtModels.forEach(debt => {
+                status_id: element.is_done ? 2 : 1,
+            };
+            debtModels.push(debt);
+        });
+        debtModels.forEach((debt) => {
             if (debt.status_id == 1) {
-                transactionModel.status_id = 1
+                transactionModel.status_id = 1;
                 return;
             }
-        })
-        addTransactionWithDebt(transactionModel, debtModels)
-        router.push("/transaction")
+        });
+        addTransactionWithDebt(transactionModel, debtModels);
+        router.push("/transaction");
     };
 
     return (
         <Box display={"flex"} justifyContent={"center"}>
-            <Stack component="form" onSubmit={handleSubmit} gap={2} width={"50%"}>
+            <Stack
+                component="form"
+                onSubmit={handleSubmit}
+                gap={2}
+                width={"50%"}
+            >
                 <Grid container spacing={1}>
                     <Box display={"flex"} gap={2}>
-                        <TextField
+                        <LocalizationProvider dateAdapter={AdapterLuxon} adapterLocale={"vi"}>
+                        {/* <TextField
                             label="Time"
                             type="datetime-local"
                             name="time"
                             value={transaction.time}
                             onChange={handleChange}
-                        />
+                        /> */}
+                            <DateTimePicker
+                                label="Time"
+                                name="time"
+                                value={transaction.time}
+                                onChange={handleChange}
+                            />
+                        </LocalizationProvider>
                         <TextField
                             label="Amount"
                             type="number"
@@ -248,17 +270,25 @@ export default function CreateTransaction() {
                 <Box display={"flex"} gap={2}>
                     <Autocomplete
                         options={categoryList}
-                        getOptionLabel={(option: CategoryDisplay) => option.name}
+                        getOptionLabel={(option: CategoryDisplay) =>
+                            option.name
+                        }
                         onChange={handleCategoryChange}
                         value={transaction.category}
                         renderInput={(params) => (
-                            <TextField {...params} label="Category" name="category" />
+                            <TextField
+                                {...params}
+                                label="Category"
+                                name="category"
+                            />
                         )}
-                        sx={{flexGrow: 1}}
+                        sx={{ flexGrow: 1 }}
                     />
                     <Autocomplete
                         options={subcategoryList}
-                        getOptionLabel={(option: SubcategoryDisplay) => option.name}
+                        getOptionLabel={(option: SubcategoryDisplay) =>
+                            option.name
+                        }
                         onChange={handleSubcategoryChange}
                         value={transaction.subcategory}
                         renderInput={(params) => (
@@ -268,7 +298,7 @@ export default function CreateTransaction() {
                                 name="subcategory"
                             />
                         )}
-                        sx={{flexGrow: 1}}
+                        sx={{ flexGrow: 1 }}
                     />
                 </Box>
                 <TextField
@@ -295,11 +325,14 @@ export default function CreateTransaction() {
                                     <Box flex={1}>
                                         <Autocomplete
                                             options={identityList}
-                                            getOptionLabel={(option: IdentityDisplay) =>
-                                                option.name
-                                            }
+                                            getOptionLabel={(
+                                                option: IdentityDisplay
+                                            ) => option.name}
                                             onChange={(e, newValue) =>
-                                                handleIdentityChange(index, newValue)
+                                                handleIdentityChange(
+                                                    index,
+                                                    newValue
+                                                )
                                             }
                                             value={debt.identity}
                                             renderInput={(params) => (
@@ -317,13 +350,22 @@ export default function CreateTransaction() {
                                             type="number"
                                             name="amount"
                                             value={debt.amount}
-                                            onChange={(e) => handleDebtChange(index, e)}
+                                            onChange={(e) =>
+                                                handleDebtChange(index, e)
+                                            }
                                         />
-                                        <Box sx={{ display: "flex", alignItems: "center" }}>
+                                        <Box
+                                            sx={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                            }}
+                                        >
                                             <Checkbox
                                                 name="in_out"
                                                 checked={debt.in_out}
-                                                onChange={(e) => handleDebtChange(index, e)}
+                                                onChange={(e) =>
+                                                    handleDebtChange(index, e)
+                                                }
                                             />
                                             <Typography>Is income?</Typography>
                                         </Box>
@@ -336,28 +378,41 @@ export default function CreateTransaction() {
                                         type="text"
                                         name="detail"
                                         value={debt.detail}
-                                        onChange={(e) => handleDebtChange(index, e)}
+                                        onChange={(e) =>
+                                            handleDebtChange(index, e)
+                                        }
                                     />
                                     <Box display="flex" gap={1}>
-                                        <Box display={"flex"} alignItems={"center"}>
-                                        <Checkbox
-                                            name="is_done"
-                                            checked={debt.is_done}
-                                            onChange={(e) => handleDebtChange(index, e)}
-                                        />
-                                        <Typography>Is done?</Typography>
-                                        </Box>
-                                        <Button type="button" sx={{color: "#ef5350", '&:hover': {
-                                            backgroundColor: "#ffe6e6"
-                                        }}}
-                                        onClick={() => handleDeleteDebt(index)}
+                                        <Box
+                                            display={"flex"}
+                                            alignItems={"center"}
                                         >
-                                        Delete Debt
-                                    </Button>
+                                            <Checkbox
+                                                name="is_done"
+                                                checked={debt.is_done}
+                                                onChange={(e) =>
+                                                    handleDebtChange(index, e)
+                                                }
+                                            />
+                                            <Typography>Is done?</Typography>
+                                        </Box>
+                                        <Button
+                                            type="button"
+                                            sx={{
+                                                color: "#ef5350",
+                                                "&:hover": {
+                                                    backgroundColor: "#ffe6e6",
+                                                },
+                                            }}
+                                            onClick={() =>
+                                                handleDeleteDebt(index)
+                                            }
+                                        >
+                                            Delete Debt
+                                        </Button>
                                     </Box>
-                                    
                                 </Stack>
-                                <Divider/>
+                                <Divider />
                             </Stack>
                         ))}
                         <Button
@@ -370,8 +425,19 @@ export default function CreateTransaction() {
                     </Stack>
                 )}
                 <Box display={"flex"} gap={2}>
-                    <Button type="button" variant="outlined" sx={{flexGrow: 1}} onClick={handleBack}>Back</Button>
-                    <Button type="submit" variant="contained" sx={{flexGrow: 1}}>
+                    <Button
+                        type="button"
+                        variant="outlined"
+                        sx={{ flexGrow: 1 }}
+                        onClick={handleBack}
+                    >
+                        Back
+                    </Button>
+                    <Button
+                        type="submit"
+                        variant="contained"
+                        sx={{ flexGrow: 1 }}
+                    >
                         Submit
                     </Button>
                 </Box>

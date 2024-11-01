@@ -96,8 +96,6 @@ export default function PermanentDrawerLeft() {
     const rounter = useRouter();
     const [transactions, setTransactions] = useState<TransactionDisplay[]>([]);
     const [show, setShow] = useState(0);
-    const [transactionDisplay, setTransactionDisplay] =
-        useState<TransactionDisplay>();
 
     useEffect(() => {
         getTransactions().then((value) => {
@@ -119,16 +117,11 @@ export default function PermanentDrawerLeft() {
             });
 
             setTransactions(transactionsDisplay);
-            setTransactionDisplay(transactionsDisplay[0]);
         });
     }, []);
 
     const handleAddTransaction = () => {
         rounter.push("/transaction/create");
-    };
-
-    const handleGridClick = (index:number) => {
-        setTransactionDisplay(transactions[index]);
     };
 
     return (
@@ -262,7 +255,6 @@ export default function PermanentDrawerLeft() {
                                 spacing={4}
                                 alignItems="center"
                                 key={index}
-                                onClick={() => handleGridClick(index)}
                             >
                                 <Grid size={COLUMN_GRID_SIZE[0]}>
                                     <Checkbox />
@@ -291,9 +283,7 @@ export default function PermanentDrawerLeft() {
                                     </Typography>
                                 </Grid>
                                 <Grid size={COLUMN_GRID_SIZE[6]}>
-                                    <Typography>
-                                        {record.detail}
-                                    </Typography>
+                                    <Typography>{record.detail}</Typography>
                                 </Grid>
                                 <Grid size={COLUMN_GRID_SIZE[7]}>
                                     {renderStatus(record.status_id)}

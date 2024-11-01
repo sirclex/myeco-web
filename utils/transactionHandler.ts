@@ -35,6 +35,9 @@ async function addTransactionWithDebt(transactionModel: TransactionModel, debtMo
     axios({
         method: "post",
         url: process.env.NEXT_PUBLIC_API_URL + "/transaction/create",
+        headers: {
+            "Authorization": `Bearer ${process.env.NEXT_PUBLIC_API_KEY}`
+        },
         data: {
             transaction: transactionModel,
             debts: debtModels

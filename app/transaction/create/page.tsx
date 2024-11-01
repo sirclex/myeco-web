@@ -88,6 +88,14 @@ export default function CreateTransaction() {
     });
 
     // @ts-expect-error: I know, I know
+    const handleTimePicker = (value) => {
+        setTransaction({
+            ...transaction,
+            time: value
+        })
+    }
+
+    // @ts-expect-error: I know, I know
     const handleChange = (event) => {
         const { name, value, type, checked } = event.target;
         setTransaction({
@@ -185,7 +193,7 @@ export default function CreateTransaction() {
     const handleSubmit = (event) => {
         event.preventDefault();
         const transactionModel: TransactionModel = {
-            issue_date: transaction.time.toString().slice(0, 16),
+            issue_date: transaction.time.toString().slice(0, 19),
             wallet_id: transaction.wallet.id,
             in_out: transaction.in_out,
             amount: transaction.amount,
@@ -238,7 +246,7 @@ export default function CreateTransaction() {
                                 label="Time"
                                 name="time"
                                 value={transaction.time}
-                                onChange={handleChange}
+                                onChange={handleTimePicker}
                             />
                         </LocalizationProvider>
                         <TextField

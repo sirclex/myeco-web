@@ -19,7 +19,12 @@ import {
     TransactionDisplay,
 } from "@/utils/transactionHandler";
 
-import { fetchPendingDebtList, PendingDebtDisplay } from "@/utils/debtHandler";
+import {
+    fetchPendingDebtList,
+    fetchAllDebtList,
+    PendingDebtDisplay,
+    DebtDisplay,
+} from "@/utils/debtHandler";
 import Grid from "@mui/material/Grid2";
 import { Button, Checkbox, Chip, Divider } from "@mui/material";
 import {
@@ -124,6 +129,8 @@ export default function PermanentDrawerLeft() {
     const rounter = useRouter();
     const [transactions, setTransactions] = useState<TransactionDisplay[]>([]);
     const [pendingDebts, setPendingDebts] = useState<PendingDebtDisplay[]>([]);
+    const [debts, setDebts] = useState<DebtDisplay[]>([]);
+    const [selectedDebts, setSelectedDebts] = useState<number[]>([]);
     const [show, setShow] = useState(0);
 
     useEffect(() => {
@@ -149,10 +156,21 @@ export default function PermanentDrawerLeft() {
         });
 
         fetchPendingDebtList().then((value) => setPendingDebts(value));
+
+        fetchAllDebtList().then((value) => setDebts(value));
     }, []);
 
     const handleAddTransaction = () => {
         rounter.push("/transaction/create");
+    };
+
+    const handleDebtCheckboxChange = (id: number) => {
+        setSelectedDebts((prevSelected) =>
+            prevSelected.includes(id)
+                ? prevSelected.filter((recordId) => recordId !== id)
+                : [...prevSelected, id]
+        );
+        console.log(selectedDebts)
     };
 
     return (
@@ -371,9 +389,92 @@ export default function PermanentDrawerLeft() {
                 </Box>
             )}
             {show == 2 && (
-                <Box>
+                <Box sx={{ width: "100%" }}>
                     <Toolbar />
-                    <Box>Debt</Box>
+                    <Toolbar disableGutters>
+                        <Button
+                            variant="contained"
+                            // onClick={handleAddTransaction}
+                        >
+                            Add Debt
+                        </Button>
+                    </Toolbar>
+                    <Box>
+                        <Divider />
+                        <Grid
+                            container
+                            spacing={4}
+                            alignItems="center"
+                            bgcolor={"#EDF8FD"}
+                        >
+                            <Grid size={COLUMN_GRID_SIZE[0]}>
+                                <Checkbox />
+                            </Grid>
+                            <Grid size={COLUMN_GRID_SIZE[1]}>
+                                <Typography>Time</Typography>
+                            </Grid>
+                            <Grid size={COLUMN_GRID_SIZE[2]}>
+                                <Typography>Amount</Typography>
+                            </Grid>
+                            <Grid size={COLUMN_GRID_SIZE[3]}>
+                                <Typography>Wallet</Typography>
+                            </Grid>
+                            <Grid size={COLUMN_GRID_SIZE[4]}>
+                                <Typography>Detail</Typography>
+                            </Grid>
+                            <Grid size={COLUMN_GRID_SIZE[5]}>
+                                <Typography>Identity</Typography>
+                            </Grid>
+                            <Grid size={COLUMN_GRID_SIZE[6]}>
+                                <Typography>Status</Typography>
+                            </Grid>
+                        </Grid>
+                        <Divider />
+
+                        {debts.map((record, index) => (
+                            <Box key={index}>
+                                <Grid container spacing={4} alignItems="center">
+                                    <Grid size={COLUMN_GRID_SIZE[0]}>
+                                        <Checkbox 
+                                            checked={selectedDebts.includes(record.id)}
+                                            onChange={() => handleDebtCheckboxChange(record.id)}
+                                        />
+                                    </Grid>
+                                    <Grid size={COLUMN_GRID_SIZE[1]}>
+                                        <Typography>
+                                            {record.issueDate}
+                                        </Typography>
+                                    </Grid>
+                                    <Grid size={COLUMN_GRID_SIZE[2]}>
+                                        <Typography>
+                                            {record.isIncome == true
+                                                ? "+ "
+                                                : "- "}
+                                            {Intl.NumberFormat("vi-VN", {
+                                                style: "currency",
+                                                currency: "VND",
+                                            }).format(record.amount)}
+                                        </Typography>
+                                    </Grid>
+                                    <Grid size={COLUMN_GRID_SIZE[3]}>
+                                        <Typography>{record.wallet}</Typography>
+                                    </Grid>
+                                    <Grid size={COLUMN_GRID_SIZE[4]}>
+                                        <Typography>{record.detail}</Typography>
+                                    </Grid>
+                                    <Grid size={COLUMN_GRID_SIZE[5]}>
+                                        <Typography>
+                                            {record.identity}
+                                        </Typography>
+                                    </Grid>
+                                    <Grid size={COLUMN_GRID_SIZE[6]}>
+                                        {renderStatus(record.statusId)}
+                                    </Grid>
+                                </Grid>
+                                <Divider />
+                            </Box>
+                        ))}
+                    </Box>
                 </Box>
             )}
             {show == 3 && (

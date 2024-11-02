@@ -7,12 +7,12 @@ interface PendingDebtDisplay {
 }
 
 interface DebtDisplay {
-    id: number,
-    transactionId: number,
+    id: number;
     issueDate: string;
     isIncome: boolean;
-    wallet: string;
     amount: number;
+    category: string,
+    subcategory: string,
     detail: string;
     identity: string;
     statusId: number;
@@ -56,11 +56,11 @@ async function fetchAllDebtList() {
     response.data.forEach((element) => {
         let debt: DebtDisplay = {
             id: element.id,
-            transactionId: element.transaction_id,
             issueDate: element.issue_date,
             isIncome: element.in_out,
-            wallet: element.wallet,
             amount: element.amount,
+            category: element.category,
+            subcategory: element.subcategory,
             detail: element.detail,
             identity: element.identity,
             statusId: element.status_id,
@@ -70,5 +70,20 @@ async function fetchAllDebtList() {
     return result;
 }
 
-export { fetchPendingDebtList, fetchAllDebtList };
+async function updateDebtStatus(debt_ids: number[], status_id: number) {
+    const response = await axios.post(
+        process.env.NEXT_PUBLIC_API_URL + "/updateStatusDebt",
+        debt_ids,
+        {
+            headers: {
+                Authorization: `Bearer ${process.env.NEXT_PUBLIC_API_KEY}`,
+            },
+            params: {
+                status_id: status_id,
+            },
+        }
+    );
+}
+
+export { fetchPendingDebtList, fetchAllDebtList, updateDebtStatus };
 export type { PendingDebtDisplay, DebtDisplay };

@@ -22,11 +22,12 @@ import {
 import {
     fetchPendingDebtList,
     fetchAllDebtList,
+    updateDebtStatus,
     PendingDebtDisplay,
     DebtDisplay,
 } from "@/utils/debtHandler";
 import Grid from "@mui/material/Grid2";
-import { Button, Checkbox, Chip, Divider } from "@mui/material";
+import { Button, Checkbox, Chip, Divider, Stack } from "@mui/material";
 import {
     DashboardOutlined,
     ReceiptLongOutlined,
@@ -111,14 +112,25 @@ function renderStatus(value: number) {
 
 function renderDatetime(value: string) {
     const datetime = DateTime.fromISO(value).setZone("system");
-    return datetime.toLocaleString(DateTime.DATETIME_MED_WITH_WEEKDAY);
+    return datetime.toFormat("ccc, LLL d, yyyy, H:mm")
 }
 
-const COLUMN_GRID_SIZE = [
+const TRANSACTION_COLUMN_GRID_SIZE = [
     0.4, // Checkbox
-    2, // Time
+    1.5, // Time
     1.5, // Amount
     1.25, // Wallet
+    1, // Category
+    1, // Subcategory
+    3, // Detail
+    1, // Status
+];
+
+const DEBT_COLUMN_GRID_SIZE = [
+    0.4, // Checkbox
+    1.5, // Time
+    1.5, // Amount
+    1.25, // Identity
     1, // Category
     1, // Subcategory
     3, // Detail
@@ -131,7 +143,25 @@ export default function PermanentDrawerLeft() {
     const [pendingDebts, setPendingDebts] = useState<PendingDebtDisplay[]>([]);
     const [debts, setDebts] = useState<DebtDisplay[]>([]);
     const [selectedDebts, setSelectedDebts] = useState<number[]>([]);
+    const [triggerReload, setTriggerReload] = useState(false);
     const [show, setShow] = useState(0);
+
+    const handleAddTransaction = () => {
+        rounter.push("/transaction/create");
+    };
+
+    const handleDebtCheckboxChange = (id: number) => {
+        setSelectedDebts((prevSelected) =>
+            prevSelected.includes(id)
+                ? prevSelected.filter((recordId) => recordId !== id)
+                : [...prevSelected, id]
+        );
+    };
+
+    const handleUpdateStatus = (status_id: number) => {
+        updateDebtStatus(selectedDebts, status_id);
+        setTriggerReload(!triggerReload);
+    };
 
     useEffect(() => {
         getTransactions().then((value) => {
@@ -158,20 +188,7 @@ export default function PermanentDrawerLeft() {
         fetchPendingDebtList().then((value) => setPendingDebts(value));
 
         fetchAllDebtList().then((value) => setDebts(value));
-    }, []);
-
-    const handleAddTransaction = () => {
-        rounter.push("/transaction/create");
-    };
-
-    const handleDebtCheckboxChange = (id: number) => {
-        setSelectedDebts((prevSelected) =>
-            prevSelected.includes(id)
-                ? prevSelected.filter((recordId) => recordId !== id)
-                : [...prevSelected, id]
-        );
-        console.log(selectedDebts)
-    };
+    }, [triggerReload]);
 
     return (
         <Box sx={{ display: "flex" }}>
@@ -219,41 +236,6 @@ export default function PermanentDrawerLeft() {
                     sx={{ flexGrow: 1, bgcolor: "background.default", p: 3 }}
                 >
                     <Toolbar />
-                    {/* <Typography sx={{ marginBottom: 2 }}>
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit,
-                        sed do eiusmod tempor incididunt ut labore et dolore
-                        magna aliqua. Rhoncus dolor purus non enim praesent
-                        elementum facilisis leo vel. Risus at ultrices mi tempus
-                        imperdiet. Semper risus in hendrerit gravida rutrum
-                        quisque non tellus. Convallis convallis tellus id
-                        interdum velit laoreet id donec ultrices. Odio morbi
-                        quis commodo odio aenean sed adipiscing. Amet nisl
-                        suscipit adipiscing bibendum est ultricies integer quis.
-                        Cursus euismod quis viverra nibh cras. Metus vulputate
-                        eu scelerisque felis imperdiet proin fermentum leo.
-                        Mauris commodo quis imperdiet massa tincidunt. Cras
-                        tincidunt lobortis feugiat vivamus at augue. At augue
-                        eget arcu dictum varius duis at consectetur lorem. Velit
-                        sed ullamcorper morbi tincidunt. Lorem donec massa
-                        sapien faucibus et molestie ac.
-                    </Typography>
-                    <Typography sx={{ marginBottom: 2 }}>
-                        Consequat mauris nunc congue nisi vitae suscipit.
-                        Fringilla est ullamcorper eget nulla facilisi etiam
-                        dignissim diam. Pulvinar elementum integer enim neque
-                        volutpat ac tincidunt. Ornare suspendisse sed nisi lacus
-                        sed viverra tellus. Purus sit amet volutpat consequat
-                        mauris. Elementum eu facilisis sed odio morbi. Euismod
-                        lacinia at quis risus sed vulputate odio. Morbi
-                        tincidunt ornare massa eget egestas purus viverra
-                        accumsan in. In hendrerit gravida rutrum quisque non
-                        tellus orci ac. Pellentesque nec nam aliquam sem et
-                        tortor. Habitant morbi tristique senectus et. Adipiscing
-                        elit duis tristique sollicitudin nibh sit. Ornare aenean
-                        euismod elementum nisi quis eleifend. Commodo viverra
-                        maecenas accumsan lacus vel facilisis. Nulla posuere
-                        sollicitudin aliquam ultrices sagittis orci a.
-                    </Typography> */}
                     <Box sx={{ width: "25%" }}>
                         <Divider />
                         <Grid container spacing={4} bgcolor={"#EDF8FD"}>
@@ -307,31 +289,31 @@ export default function PermanentDrawerLeft() {
                             alignItems="center"
                             bgcolor={"#EDF8FD"}
                         >
-                            <Grid size={COLUMN_GRID_SIZE[0]}>
+                            <Grid size={TRANSACTION_COLUMN_GRID_SIZE[0]}>
                                 <Checkbox />
                             </Grid>
-                            <Grid size={COLUMN_GRID_SIZE[1]}>
+                            <Grid size={TRANSACTION_COLUMN_GRID_SIZE[1]}>
                                 <Typography>Time</Typography>
                             </Grid>
-                            <Grid size={COLUMN_GRID_SIZE[2]}>
+                            <Grid size={TRANSACTION_COLUMN_GRID_SIZE[2]}>
                                 <Typography>Amount</Typography>
                             </Grid>
-                            <Grid size={COLUMN_GRID_SIZE[3]}>
+                            <Grid size={TRANSACTION_COLUMN_GRID_SIZE[3]}>
                                 <Typography>Wallet</Typography>
                             </Grid>
-                            <Grid size={COLUMN_GRID_SIZE[4]}>
+                            <Grid size={TRANSACTION_COLUMN_GRID_SIZE[4]}>
                                 <Typography>Category</Typography>
                             </Grid>
-                            <Grid size={COLUMN_GRID_SIZE[5]}>
+                            <Grid size={TRANSACTION_COLUMN_GRID_SIZE[5]}>
                                 <Typography>Subcategory</Typography>
                             </Grid>
-                            <Grid size={COLUMN_GRID_SIZE[6]}>
+                            <Grid size={TRANSACTION_COLUMN_GRID_SIZE[6]}>
                                 <Typography>Detail</Typography>
                             </Grid>
-                            <Grid size={COLUMN_GRID_SIZE[7]}>
+                            <Grid size={TRANSACTION_COLUMN_GRID_SIZE[7]}>
                                 <Typography>Status</Typography>
                             </Grid>
-                            <Grid size={COLUMN_GRID_SIZE[8]}>
+                            <Grid size={TRANSACTION_COLUMN_GRID_SIZE[8]}>
                                 <Typography></Typography>
                             </Grid>
                         </Grid>
@@ -340,15 +322,15 @@ export default function PermanentDrawerLeft() {
                         {transactions.map((record, index) => (
                             <Box key={index}>
                                 <Grid container spacing={4} alignItems="center">
-                                    <Grid size={COLUMN_GRID_SIZE[0]}>
+                                    <Grid size={TRANSACTION_COLUMN_GRID_SIZE[0]}>
                                         <Checkbox />
                                     </Grid>
-                                    <Grid size={COLUMN_GRID_SIZE[1]}>
+                                    <Grid size={TRANSACTION_COLUMN_GRID_SIZE[1]}>
                                         <Typography>
                                             {record.issue_date}
                                         </Typography>
                                     </Grid>
-                                    <Grid size={COLUMN_GRID_SIZE[2]}>
+                                    <Grid size={TRANSACTION_COLUMN_GRID_SIZE[2]}>
                                         <Typography>
                                             {record.in_out == true
                                                 ? "+ "
@@ -359,27 +341,24 @@ export default function PermanentDrawerLeft() {
                                             }).format(record.amount)}
                                         </Typography>
                                     </Grid>
-                                    <Grid size={COLUMN_GRID_SIZE[3]}>
+                                    <Grid size={TRANSACTION_COLUMN_GRID_SIZE[3]}>
                                         <Typography>{record.wallet}</Typography>
                                     </Grid>
-                                    <Grid size={COLUMN_GRID_SIZE[4]}>
+                                    <Grid size={TRANSACTION_COLUMN_GRID_SIZE[4]}>
                                         <Typography>
                                             {record.category}
                                         </Typography>
                                     </Grid>
-                                    <Grid size={COLUMN_GRID_SIZE[5]}>
+                                    <Grid size={TRANSACTION_COLUMN_GRID_SIZE[5]}>
                                         <Typography>
                                             {record.subcategory}
                                         </Typography>
                                     </Grid>
-                                    <Grid size={COLUMN_GRID_SIZE[6]}>
+                                    <Grid size={TRANSACTION_COLUMN_GRID_SIZE[6]}>
                                         <Typography>{record.detail}</Typography>
                                     </Grid>
-                                    <Grid size={COLUMN_GRID_SIZE[7]}>
+                                    <Grid size={TRANSACTION_COLUMN_GRID_SIZE[7]}>
                                         {renderStatus(record.status_id)}
-                                    </Grid>
-                                    <Grid size={COLUMN_GRID_SIZE[8]}>
-                                        <Typography></Typography>
                                     </Grid>
                                 </Grid>
                                 <Divider />
@@ -392,12 +371,26 @@ export default function PermanentDrawerLeft() {
                 <Box sx={{ width: "100%" }}>
                     <Toolbar />
                     <Toolbar disableGutters>
-                        <Button
-                            variant="contained"
-                            // onClick={handleAddTransaction}
-                        >
-                            Add Debt
-                        </Button>
+                        <Stack direction={"row"} spacing={2}>
+                            <Button
+                                variant="contained"
+                                // onClick={handleAddTransaction}
+                            >
+                                Add Debt
+                            </Button>
+                            <Button
+                                variant="outlined"
+                                onClick={() => handleUpdateStatus(2)}
+                            >
+                                Mark as Done
+                            </Button>
+                            <Button
+                                variant="outlined"
+                                onClick={() => handleUpdateStatus(1)}
+                            >
+                                Mark as Pending
+                            </Button>
+                        </Stack>
                     </Toolbar>
                     <Box>
                         <Divider />
@@ -407,25 +400,28 @@ export default function PermanentDrawerLeft() {
                             alignItems="center"
                             bgcolor={"#EDF8FD"}
                         >
-                            <Grid size={COLUMN_GRID_SIZE[0]}>
+                            <Grid size={DEBT_COLUMN_GRID_SIZE[0]}>
                                 <Checkbox />
                             </Grid>
-                            <Grid size={COLUMN_GRID_SIZE[1]}>
+                            <Grid size={DEBT_COLUMN_GRID_SIZE[1]}>
                                 <Typography>Time</Typography>
                             </Grid>
-                            <Grid size={COLUMN_GRID_SIZE[2]}>
+                            <Grid size={DEBT_COLUMN_GRID_SIZE[2]}>
                                 <Typography>Amount</Typography>
                             </Grid>
-                            <Grid size={COLUMN_GRID_SIZE[3]}>
-                                <Typography>Wallet</Typography>
-                            </Grid>
-                            <Grid size={COLUMN_GRID_SIZE[4]}>
-                                <Typography>Detail</Typography>
-                            </Grid>
-                            <Grid size={COLUMN_GRID_SIZE[5]}>
+                            <Grid size={DEBT_COLUMN_GRID_SIZE[3]}>
                                 <Typography>Identity</Typography>
                             </Grid>
-                            <Grid size={COLUMN_GRID_SIZE[6]}>
+                            <Grid size={DEBT_COLUMN_GRID_SIZE[4]}>
+                                <Typography>Category</Typography>
+                            </Grid>
+                            <Grid size={DEBT_COLUMN_GRID_SIZE[5]}>
+                                <Typography>Subcategory</Typography>
+                            </Grid>
+                            <Grid size={DEBT_COLUMN_GRID_SIZE[6]}>
+                                <Typography>Detail</Typography>
+                            </Grid>
+                            <Grid size={DEBT_COLUMN_GRID_SIZE[7]}>
                                 <Typography>Status</Typography>
                             </Grid>
                         </Grid>
@@ -434,18 +430,24 @@ export default function PermanentDrawerLeft() {
                         {debts.map((record, index) => (
                             <Box key={index}>
                                 <Grid container spacing={4} alignItems="center">
-                                    <Grid size={COLUMN_GRID_SIZE[0]}>
-                                        <Checkbox 
-                                            checked={selectedDebts.includes(record.id)}
-                                            onChange={() => handleDebtCheckboxChange(record.id)}
+                                    <Grid size={DEBT_COLUMN_GRID_SIZE[0]}>
+                                        <Checkbox
+                                            checked={selectedDebts.includes(
+                                                record.id
+                                            )}
+                                            onChange={() =>
+                                                handleDebtCheckboxChange(
+                                                    record.id
+                                                )
+                                            }
                                         />
                                     </Grid>
-                                    <Grid size={COLUMN_GRID_SIZE[1]}>
+                                    <Grid size={DEBT_COLUMN_GRID_SIZE[1]}>
                                         <Typography>
-                                            {record.issueDate}
+                                            {renderDatetime(record.issueDate)}
                                         </Typography>
                                     </Grid>
-                                    <Grid size={COLUMN_GRID_SIZE[2]}>
+                                    <Grid size={DEBT_COLUMN_GRID_SIZE[2]}>
                                         <Typography>
                                             {record.isIncome == true
                                                 ? "+ "
@@ -456,18 +458,21 @@ export default function PermanentDrawerLeft() {
                                             }).format(record.amount)}
                                         </Typography>
                                     </Grid>
-                                    <Grid size={COLUMN_GRID_SIZE[3]}>
-                                        <Typography>{record.wallet}</Typography>
-                                    </Grid>
-                                    <Grid size={COLUMN_GRID_SIZE[4]}>
-                                        <Typography>{record.detail}</Typography>
-                                    </Grid>
-                                    <Grid size={COLUMN_GRID_SIZE[5]}>
+                                    <Grid size={DEBT_COLUMN_GRID_SIZE[3]}>
                                         <Typography>
                                             {record.identity}
                                         </Typography>
                                     </Grid>
-                                    <Grid size={COLUMN_GRID_SIZE[6]}>
+                                    <Grid size={DEBT_COLUMN_GRID_SIZE[4]}>
+                                        <Typography>{record.category}</Typography>
+                                    </Grid>
+                                    <Grid size={DEBT_COLUMN_GRID_SIZE[5]}>
+                                        <Typography>{record.subcategory}</Typography>
+                                    </Grid>
+                                    <Grid size={DEBT_COLUMN_GRID_SIZE[6]}>
+                                        <Typography>{record.detail}</Typography>
+                                    </Grid>
+                                    <Grid size={DEBT_COLUMN_GRID_SIZE[7]}>
                                         {renderStatus(record.statusId)}
                                     </Grid>
                                 </Grid>

@@ -18,6 +18,8 @@ import {
     getTransactions,
     TransactionDisplay,
 } from "@/utils/transactionHandler";
+
+import { fetchPendingDebtList, PendingDebtDisplay } from "@/utils/debtHandler";
 import Grid from "@mui/material/Grid2";
 import { Button, Checkbox, Chip, Divider } from "@mui/material";
 import {
@@ -40,6 +42,32 @@ const dashboardItem = [
     { id: 5, name: "Wallet", icon: <AccountBalanceWalletOutlined /> },
     { id: 6, name: "Identity", icon: <PermIdentityOutlined /> },
 ];
+
+function renderFlow(isIncome: boolean) {
+    if (isIncome) {
+        return (
+            <Chip
+                label="Income"
+                sx={{
+                    backgroundColor: "#E5FAE6",
+                    color: "#297B32",
+                    fontWeight: "bold",
+                }}
+            />
+        );
+    } else {
+        return (
+            <Chip
+                label="Expense"
+                sx={{
+                    backgroundColor: "#FFEBEB",
+                    color: "#E83838",
+                    fontWeight: "bold",
+                }}
+            />
+        );
+    }
+}
 
 function renderStatus(value: number) {
     if (value == 2)
@@ -95,6 +123,7 @@ const COLUMN_GRID_SIZE = [
 export default function PermanentDrawerLeft() {
     const rounter = useRouter();
     const [transactions, setTransactions] = useState<TransactionDisplay[]>([]);
+    const [pendingDebts, setPendingDebts] = useState<PendingDebtDisplay[]>([]);
     const [show, setShow] = useState(0);
 
     useEffect(() => {
@@ -118,6 +147,8 @@ export default function PermanentDrawerLeft() {
 
             setTransactions(transactionsDisplay);
         });
+
+        fetchPendingDebtList().then((value) => setPendingDebts(value));
     }, []);
 
     const handleAddTransaction = () => {
@@ -170,7 +201,7 @@ export default function PermanentDrawerLeft() {
                     sx={{ flexGrow: 1, bgcolor: "background.default", p: 3 }}
                 >
                     <Toolbar />
-                    <Typography sx={{ marginBottom: 2 }}>
+                    {/* <Typography sx={{ marginBottom: 2 }}>
                         Lorem ipsum dolor sit amet, consectetur adipiscing elit,
                         sed do eiusmod tempor incididunt ut labore et dolore
                         magna aliqua. Rhoncus dolor purus non enim praesent
@@ -204,7 +235,39 @@ export default function PermanentDrawerLeft() {
                         euismod elementum nisi quis eleifend. Commodo viverra
                         maecenas accumsan lacus vel facilisis. Nulla posuere
                         sollicitudin aliquam ultrices sagittis orci a.
-                    </Typography>
+                    </Typography> */}
+                    <Box sx={{ width: "25%" }}>
+                        <Divider />
+                        <Grid container spacing={4} bgcolor={"#EDF8FD"}>
+                            <Grid size={4}>
+                                <Typography>Name</Typography>
+                            </Grid>
+                            <Grid size={4}>
+                                <Typography>Amount</Typography>
+                            </Grid>
+                            <Grid size={4}>
+                                <Typography>Flow</Typography>
+                            </Grid>
+                        </Grid>
+                        <Divider />
+
+                        {pendingDebts.map((record, index) => (
+                            <Box key={index}>
+                                <Grid container spacing={4} alignItems="center">
+                                    <Grid size={4}>
+                                        <Typography>{record.name}</Typography>
+                                    </Grid>
+                                    <Grid size={4}>
+                                        <Typography>{record.amount}</Typography>
+                                    </Grid>
+                                    <Grid size={4}>
+                                        {renderFlow(record.isIncome)}
+                                    </Grid>
+                                </Grid>
+                                <Divider />
+                            </Box>
+                        ))}
+                    </Box>
                 </Box>
             )}
             {show == 1 && (
@@ -220,7 +283,12 @@ export default function PermanentDrawerLeft() {
                     </Toolbar>
                     <Box>
                         <Divider />
-                        <Grid container spacing={4} alignItems="center" bgcolor={"#EDF8FD"}>
+                        <Grid
+                            container
+                            spacing={4}
+                            alignItems="center"
+                            bgcolor={"#EDF8FD"}
+                        >
                             <Grid size={COLUMN_GRID_SIZE[0]}>
                                 <Checkbox />
                             </Grid>
@@ -253,11 +321,7 @@ export default function PermanentDrawerLeft() {
 
                         {transactions.map((record, index) => (
                             <Box key={index}>
-                                <Grid
-                                    container
-                                    spacing={4}
-                                    alignItems="center"
-                                >
+                                <Grid container spacing={4} alignItems="center">
                                     <Grid size={COLUMN_GRID_SIZE[0]}>
                                         <Checkbox />
                                     </Grid>

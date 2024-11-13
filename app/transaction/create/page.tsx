@@ -62,6 +62,11 @@ export default function CreateTransaction() {
     const [identityList, setIdentityList] = useState<IdentityDisplay[]>([]);
 
     useEffect(() => {
+        const token = sessionStorage.getItem('token')
+        if (!token || token === '') {
+            router.push('/login')
+        }
+
         fetchWalletInfo().then((value) => {
             setWalletList(value);
         });
@@ -73,7 +78,7 @@ export default function CreateTransaction() {
         fetchIdentityList().then((value) => {
             setIdentityList(value);
         });
-    }, []);
+    }, [router]);
 
     const [transaction, setTransaction] = useState<Transaction>({
         time: DateTime.now(),

@@ -53,10 +53,15 @@ export default function CreateTransaction() {
     const [walletListTo, setWalletListTo] = useState<WalletDisplay[]>([]);
 
     useEffect(() => {
+        const token = sessionStorage.getItem('token')
+        if (!token || token === '') {
+            router.push('/login')
+        }
+
         fetchWalletInfo().then((value) => {
             setWalletListFrom(value);
         });
-    }, []);
+    }, [router]);
 
     const [transactionFrom, setTransactionFrom] = useState<Transaction>({
         time: DateTime.now(),

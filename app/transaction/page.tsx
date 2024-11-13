@@ -138,7 +138,7 @@ const DEBT_COLUMN_GRID_SIZE = [
 ];
 
 export default function PermanentDrawerLeft() {
-    const rounter = useRouter();
+    const router = useRouter();
     const [transactions, setTransactions] = useState<TransactionDisplay[]>([]);
     const [pendingDebts, setPendingDebts] = useState<PendingDebtDisplay[]>([]);
     const [debts, setDebts] = useState<DebtDisplay[]>([]);
@@ -147,11 +147,11 @@ export default function PermanentDrawerLeft() {
     const [show, setShow] = useState(0);
 
     const handleAddTransaction = () => {
-        rounter.push("/transaction/create");
+        router.push("/transaction/create");
     };
 
     const handleAddSwtichTransaction = () => {
-        rounter.push("/transaction/switch");
+        router.push("/transaction/switch");
     };
 
     const handleDebtCheckboxChange = (id: number) => {
@@ -168,6 +168,11 @@ export default function PermanentDrawerLeft() {
     };
 
     useEffect(() => {
+        const token = sessionStorage.getItem('token')
+        if (!token || token === '') {
+            router.push('/login')
+        }
+
         getTransactions().then((value) => {
             const transactionsDisplay: TransactionDisplay[] = [];
 
@@ -192,7 +197,7 @@ export default function PermanentDrawerLeft() {
         fetchPendingDebtList().then((value) => setPendingDebts(value));
 
         fetchAllDebtList().then((value) => setDebts(value));
-    }, [triggerReload]);
+    }, [triggerReload, router]);
 
     return (
         <Box sx={{ display: "flex" }}>

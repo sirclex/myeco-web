@@ -26,8 +26,35 @@ import {
     PendingDebtDisplay,
     DebtDisplay,
 } from "@/utils/debtHandler";
+
+import {
+    fetchIdentityList,
+    addIdentity,
+    IdentityDisplay,
+} from "@/utils/identityHandler";
+
+import {
+    fetchCategory,
+    CategoryDisplay,
+    addCategory,
+} from "@/utils/categoryHandler";
+
+import { addSubcategory } from "@/utils/subcategoryHandler";
+
 import Grid from "@mui/material/Grid2";
-import { Button, Checkbox, Chip, Divider, Stack } from "@mui/material";
+import {
+    Button,
+    Checkbox,
+    Chip,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogContentText,
+    DialogTitle,
+    Divider,
+    Stack,
+    TextField,
+} from "@mui/material";
 import {
     DashboardOutlined,
     ReceiptLongOutlined,
@@ -35,6 +62,7 @@ import {
     SubscriptionsOutlined,
     PermIdentityOutlined,
     AccountBalanceWalletOutlined,
+    CategoryOutlined,
 } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
 
@@ -47,6 +75,7 @@ const dashboardItem = [
     { id: 4, name: "Subscription", icon: <SubscriptionsOutlined /> },
     { id: 5, name: "Wallet", icon: <AccountBalanceWalletOutlined /> },
     { id: 6, name: "Identity", icon: <PermIdentityOutlined /> },
+    { id: 7, name: "Category", icon: <CategoryOutlined /> },
 ];
 
 function renderFlow(isIncome: boolean) {
@@ -137,40 +166,39 @@ const DEBT_COLUMN_GRID_SIZE = [
     1, // Status
 ];
 
+const IDENTITY_COLUMN_GRID_SIZE = [
+    0.4, // Checkbox
+    1.5, // Name
+];
+
+const CATEGORY_COLUMN_GRID_SIZE = [
+    0.4, // Checkbox
+    1.5, // Name
+    10, // Action
+];
+
 export default function PermanentDrawerLeft() {
     const router = useRouter();
     const [transactions, setTransactions] = useState<TransactionDisplay[]>([]);
     const [pendingDebts, setPendingDebts] = useState<PendingDebtDisplay[]>([]);
+    const [identities, setIdentities] = useState<IdentityDisplay[]>([]);
     const [debts, setDebts] = useState<DebtDisplay[]>([]);
     const [selectedDebts, setSelectedDebts] = useState<number[]>([]);
     const [triggerReload, setTriggerReload] = useState(false);
     const [show, setShow] = useState(0);
-
-    const handleAddTransaction = () => {
-        router.push("/transaction/create");
-    };
-
-    const handleAddSwtichTransaction = () => {
-        router.push("/transaction/switch");
-    };
-
-    const handleDebtCheckboxChange = (id: number) => {
-        setSelectedDebts((prevSelected) =>
-            prevSelected.includes(id)
-                ? prevSelected.filter((recordId) => recordId !== id)
-                : [...prevSelected, id]
-        );
-    };
-
-    const handleUpdateStatus = (status_id: number) => {
-        updateDebtStatus(selectedDebts, status_id);
-        setTriggerReload(!triggerReload);
-    };
+    const [creatingIdentity, setCreatingIdentity] = useState(false);
+    const [newIdentityName, setNewIdentityName] = useState("");
+    const [categories, setCategories] = useState<CategoryDisplay[]>([]);
+    const [creatingCategory, setCreatingCategory] = useState(false);
+    const [newCategoryName, setNewCategoryName] = useState("");
+    const [selectedCategoryId, setSelectedCategoryId] = useState(0);
+    const [creatingSubcategory, setCreatingSubcategory] = useState(false);
+    const [newSubcategoryName, setNewSubcategoryName] = useState("");
 
     useEffect(() => {
-        const token = sessionStorage.getItem('token')
-        if (!token || token === '') {
-            router.push('/login')
+        const token = sessionStorage.getItem("token");
+        if (!token || token === "") {
+            router.push("/login");
         }
 
         getTransactions().then((value) => {
@@ -197,7 +225,96 @@ export default function PermanentDrawerLeft() {
         fetchPendingDebtList().then((value) => setPendingDebts(value));
 
         fetchAllDebtList().then((value) => setDebts(value));
+
+        fetchIdentityList().then((value) => setIdentities(value));
+
+        fetchCategory().then((value) => setCategories(value));
     }, [triggerReload, router]);
+
+    const handleAddTransaction = () => {
+        router.push("/transaction/create");
+    };
+
+    const handleAddSwtichTransaction = () => {
+        router.push("/transaction/switch");
+    };
+
+    const handleDebtCheckboxChange = (id: number) => {
+        setSelectedDebts((prevSelected) =>
+            prevSelected.includes(id)
+                ? prevSelected.filter((recordId) => recordId !== id)
+                : [...prevSelected, id]
+        );
+    };
+
+    const handleUpdateStatus = (status_id: number) => {
+        updateDebtStatus(selectedDebts, status_id);
+        setTriggerReload(!triggerReload);
+    };
+
+    // Create Identity
+    const handleOpenCreateIdentity = () => {
+        setCreatingIdentity(true);
+    };
+
+    const handleCloseCreateIdentity = () => {
+        setCreatingIdentity(false);
+    };
+
+    // @ts-expect-error: I know, I know
+    const handleNewIdentityNameChange = (event) => {
+        setNewIdentityName(event.target.value);
+    };
+
+    const handleSubmitNewIdentity = () => {
+        addIdentity(newIdentityName);
+        setNewIdentityName("");
+        handleCloseCreateIdentity();
+        setTriggerReload(!triggerReload);
+    };
+
+    // Create Category
+    const handleOpenCreateCategory = () => {
+        setCreatingCategory(true);
+    };
+
+    const handleCloseCreateCategory = () => {
+        setCreatingCategory(false);
+    };
+
+    // @ts-expect-error: I know, I know
+    const handleNewCategoryNameChange = (event) => {
+        setNewCategoryName(event.target.value);
+    };
+
+    const handleSubmitNewCategory = () => {
+        addCategory(newCategoryName);
+        setNewCategoryName("");
+        handleCloseCreateCategory();
+        setTriggerReload(!triggerReload);
+    };
+
+    // Create Subcategory
+    const handleOpenCreateSubcategory = (categoryId: number) => {
+        setSelectedCategoryId(categoryId);
+        setCreatingSubcategory(true);
+    };
+
+    const handleCloseCreateSubcategory = () => {
+        setCreatingSubcategory(false);
+    };
+
+    // @ts-expect-error: I know, I know
+    const handleNewSubcategoryNameChange = (event) => {
+        setNewSubcategoryName(event.target.value);
+    };
+
+    const handleSubmitNewSubcategory = () => {
+        addSubcategory(newSubcategoryName, selectedCategoryId);
+        setNewSubcategoryName("");
+        handleCloseCreateSubcategory();
+        setTriggerReload(!triggerReload);
+    };
 
     return (
         <Box sx={{ display: "flex" }}>
@@ -239,7 +356,7 @@ export default function PermanentDrawerLeft() {
                     ))}
                 </List>
             </Drawer>
-            {show == 0 && (
+            {show == 0 && ( // Dashboard view
                 <Box
                     component="main"
                     sx={{ flexGrow: 1, bgcolor: "background.default", p: 3 }}
@@ -259,27 +376,38 @@ export default function PermanentDrawerLeft() {
                             </Grid>
                         </Grid>
                         <Divider />
-
-                        {pendingDebts.map((record, index) => (
-                            <Box key={index}>
-                                <Grid container spacing={4} alignItems="center">
-                                    <Grid size={4}>
-                                        <Typography>{record.name}</Typography>
+                        {pendingDebts.length > 0 ? (
+                            pendingDebts.map((record, index) => (
+                                <Box key={index}>
+                                    <Grid
+                                        container
+                                        spacing={4}
+                                        alignItems="center"
+                                    >
+                                        <Grid size={4}>
+                                            <Typography>
+                                                {record.name}
+                                            </Typography>
+                                        </Grid>
+                                        <Grid size={4}>
+                                            <Typography>
+                                                {record.amount}
+                                            </Typography>
+                                        </Grid>
+                                        <Grid size={4}>
+                                            {renderFlow(record.isIncome)}
+                                        </Grid>
                                     </Grid>
-                                    <Grid size={4}>
-                                        <Typography>{record.amount}</Typography>
-                                    </Grid>
-                                    <Grid size={4}>
-                                        {renderFlow(record.isIncome)}
-                                    </Grid>
-                                </Grid>
-                                <Divider />
-                            </Box>
-                        ))}
+                                    <Divider />
+                                </Box>
+                            ))
+                        ) : (
+                            <Typography>No debts</Typography>
+                        )}
                     </Box>
                 </Box>
             )}
-            {show == 1 && (
+            {show == 1 && ( // Transaction view
                 <Box sx={{ width: "100%" }}>
                     <Toolbar />
                     <Toolbar disableGutters>
@@ -400,17 +528,11 @@ export default function PermanentDrawerLeft() {
                     </Box>
                 </Box>
             )}
-            {show == 2 && (
+            {show == 2 && ( // Debt view
                 <Box sx={{ width: "100%" }}>
                     <Toolbar />
                     <Toolbar disableGutters>
                         <Stack direction={"row"} spacing={2}>
-                            <Button
-                                variant="contained"
-                                // onClick={handleAddTransaction}
-                            >
-                                Add Debt
-                            </Button>
                             <Button
                                 variant="outlined"
                                 onClick={() => handleUpdateStatus(2)}
@@ -519,22 +641,217 @@ export default function PermanentDrawerLeft() {
                     </Box>
                 </Box>
             )}
-            {show == 3 && (
+            {show == 3 && ( // Subscription view
                 <Box>
                     <Toolbar />
                     <Box>Subscription</Box>
                 </Box>
             )}
-            {show == 4 && (
+            {show == 4 && ( // Wallet view
                 <Box>
                     <Toolbar />
                     <Box>Wallet</Box>
                 </Box>
             )}
-            {show == 5 && (
-                <Box>
+            {show == 5 && ( // Identity view
+                <Box sx={{ width: "100%" }}>
                     <Toolbar />
-                    <Box>Identity</Box>
+                    <Toolbar disableGutters>
+                        <Stack direction={"row"} gap={2}>
+                            <Button
+                                variant="contained"
+                                onClick={handleOpenCreateIdentity}
+                            >
+                                Add Identity
+                            </Button>
+                        </Stack>
+                    </Toolbar>
+                    <Box>
+                        <Divider />
+                        <Grid
+                            container
+                            spacing={4}
+                            alignItems="center"
+                            bgcolor={"#EDF8FD"}
+                        >
+                            <Grid size={IDENTITY_COLUMN_GRID_SIZE[0]}>
+                                <Checkbox />
+                            </Grid>
+                            <Grid size={IDENTITY_COLUMN_GRID_SIZE[1]}>
+                                <Typography>Name</Typography>
+                            </Grid>
+                        </Grid>
+                        <Divider />
+
+                        {identities.map((record, index) => (
+                            <Box key={index}>
+                                <Grid container spacing={4} alignItems="center">
+                                    <Grid size={IDENTITY_COLUMN_GRID_SIZE[0]}>
+                                        <Checkbox />
+                                    </Grid>
+                                    <Grid size={IDENTITY_COLUMN_GRID_SIZE[1]}>
+                                        <Typography>{record.name}</Typography>
+                                    </Grid>
+                                </Grid>
+                                <Divider />
+                            </Box>
+                        ))}
+
+                        <Dialog
+                            open={creatingIdentity}
+                            onClose={handleCloseCreateIdentity}
+                        >
+                            <DialogTitle>Add new identity</DialogTitle>
+                            <DialogContent>
+                                <DialogContentText>
+                                    Please enter identity name:
+                                </DialogContentText>
+                                <TextField
+                                    autoFocus
+                                    margin="dense"
+                                    label="Name"
+                                    type="text"
+                                    fullWidth
+                                    value={newIdentityName}
+                                    onChange={handleNewIdentityNameChange}
+                                />
+                            </DialogContent>
+                            <DialogActions>
+                                <Button onClick={handleCloseCreateIdentity}>
+                                    Cancel
+                                </Button>
+                                <Button onClick={handleSubmitNewIdentity}>
+                                    Confirm
+                                </Button>
+                            </DialogActions>
+                        </Dialog>
+                    </Box>
+                </Box>
+            )}
+            {show == 6 && ( // Wallet view
+                <Box sx={{ width: "100%" }}>
+                    <Toolbar />
+                    <Toolbar disableGutters>
+                        <Stack direction={"row"} gap={2}>
+                            <Button
+                                variant="contained"
+                                onClick={handleOpenCreateCategory}
+                            >
+                                Add Category
+                            </Button>
+                        </Stack>
+                    </Toolbar>
+                    <Box>
+                        <Divider />
+                        <Grid
+                            container
+                            spacing={4}
+                            alignItems="center"
+                            bgcolor={"#EDF8FD"}
+                        >
+                            <Grid size={CATEGORY_COLUMN_GRID_SIZE[0]}>
+                                <Checkbox />
+                            </Grid>
+                            <Grid size={CATEGORY_COLUMN_GRID_SIZE[1]}>
+                                <Typography>Name</Typography>
+                            </Grid>
+                            <Grid size={CATEGORY_COLUMN_GRID_SIZE[2]}>
+                                <Typography>Action</Typography>
+                            </Grid>
+                        </Grid>
+                        <Divider />
+
+                        {categories.map((record, index) => (
+                            <Box key={index}>
+                                <Grid container spacing={4} alignItems="center">
+                                    <Grid size={CATEGORY_COLUMN_GRID_SIZE[0]}>
+                                        <Checkbox />
+                                    </Grid>
+                                    <Grid size={CATEGORY_COLUMN_GRID_SIZE[1]}>
+                                        <Typography>{record.name}</Typography>
+                                    </Grid>
+                                    <Grid size={CATEGORY_COLUMN_GRID_SIZE[2]}>
+                                        <Stack direction="row" spacing={1}>
+                                            <Button
+                                                variant="contained"
+                                                onClick={() =>
+                                                    handleOpenCreateSubcategory(
+                                                        record.id
+                                                    )
+                                                }
+                                            >
+                                                + Sub
+                                            </Button>
+                                            {/* <Button
+                                                variant="contained"
+                                                color="error"
+                                            >
+                                                Delete
+                                            </Button> */}
+                                        </Stack>
+                                    </Grid>
+                                </Grid>
+                                <Divider />
+                            </Box>
+                        ))}
+
+                        <Dialog
+                            open={creatingCategory}
+                            onClose={handleCloseCreateCategory}
+                        >
+                            <DialogTitle>Add new category</DialogTitle>
+                            <DialogContent>
+                                <DialogContentText>
+                                    Please enter category name:
+                                </DialogContentText>
+                                <TextField
+                                    autoFocus
+                                    margin="dense"
+                                    label="Name"
+                                    type="text"
+                                    fullWidth
+                                    value={newCategoryName}
+                                    onChange={handleNewCategoryNameChange}
+                                />
+                            </DialogContent>
+                            <DialogActions>
+                                <Button onClick={handleCloseCreateCategory}>
+                                    Cancel
+                                </Button>
+                                <Button onClick={handleSubmitNewCategory}>
+                                    Confirm
+                                </Button>
+                            </DialogActions>
+                        </Dialog>
+                        <Dialog
+                            open={creatingSubcategory}
+                            onClose={handleCloseCreateSubcategory}
+                        >
+                            <DialogTitle>Add new category</DialogTitle>
+                            <DialogContent>
+                                <DialogContentText>
+                                    Please enter subcategory name:
+                                </DialogContentText>
+                                <TextField
+                                    autoFocus
+                                    margin="dense"
+                                    label="Subcategory name"
+                                    type="text"
+                                    fullWidth
+                                    value={newSubcategoryName}
+                                    onChange={handleNewSubcategoryNameChange}
+                                />
+                            </DialogContent>
+                            <DialogActions>
+                                <Button onClick={handleCloseCreateSubcategory}>
+                                    Cancel
+                                </Button>
+                                <Button onClick={handleSubmitNewSubcategory}>
+                                    Confirm
+                                </Button>
+                            </DialogActions>
+                        </Dialog>
+                    </Box>
                 </Box>
             )}
         </Box>

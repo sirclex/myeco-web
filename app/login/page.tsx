@@ -10,10 +10,6 @@ const Login = () => {
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const data = new FormData(event.currentTarget);
-        console.log({
-            username: data.get("username"),
-            password: data.get("password"),
-        });
         const username = data.get("username")
         const password = data.get("password")
         if (username != null && password != null) {

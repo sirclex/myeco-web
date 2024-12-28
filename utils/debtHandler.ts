@@ -52,8 +52,6 @@ async function fetchAllDebtList() {
     );
     let result: DebtDisplay[] = [];
 
-    console.log(response.data);
-
     // @ts-ignore
     response.data.forEach((element) => {
         let debt: DebtDisplay = {

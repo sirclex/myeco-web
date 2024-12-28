@@ -7,7 +7,7 @@ interface IdentityDisplay {
 
 async function fetchIdentityList() {
     const response = await axios.get(
-        process.env.NEXT_PUBLIC_API_URL + "/identities",
+        process.env.NEXT_PUBLIC_API_URL + "/identity",
         {
             headers: {
                 Authorization: `Bearer ${process.env.NEXT_PUBLIC_API_KEY}`,

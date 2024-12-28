@@ -6,7 +6,7 @@ interface WalletDisplay {
 }
 
 async function fetchWalletInfo() {
-    const response = await axios.get(process.env.NEXT_PUBLIC_API_URL + "/wallets",
+    const response = await axios.get(process.env.NEXT_PUBLIC_API_URL + "/wallet",
         {
             headers: {
                 "Authorization": `Bearer ${process.env.NEXT_PUBLIC_API_KEY}`

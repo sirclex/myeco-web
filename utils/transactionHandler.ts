@@ -1,9 +1,9 @@
 import axios from "axios";
 
 interface TransactionModel {
-    issue_date: string;
+    issue_at: string;
     wallet_id: number;
-    in_out: boolean;
+    is_income: boolean;
     amount: number;
     category_id: number;
     subcategory_id: number;
@@ -24,7 +24,7 @@ interface TransactionDisplay {
 
 interface DebtModel {
     transaction_id: number;
-    in_out: boolean;
+    is_income: boolean;
     amount: number;
     identity_id: number;
     detail: string;
@@ -37,20 +37,20 @@ async function addTransactionWithDebt(
 ) {
     axios({
         method: "post",
-        url: process.env.NEXT_PUBLIC_API_URL + "/transaction/create",
+        url: process.env.NEXT_PUBLIC_API_URL + "/transaction",
         headers: {
             Authorization: `Bearer ${process.env.NEXT_PUBLIC_API_KEY}`,
         },
         data: {
-            transaction: transactionModel,
-            debts: debtModels,
+            transaction_in: transactionModel,
+            debts_in: debtModels,
         },
     });
 }
 
 async function getTransactions() {
     const response = await axios.get(
-        process.env.NEXT_PUBLIC_API_URL + "/transactions",
+        process.env.NEXT_PUBLIC_API_URL + "/transaction",
         {
             headers: {
                 Authorization: `Bearer ${process.env.NEXT_PUBLIC_API_KEY}`,

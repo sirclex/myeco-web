@@ -198,9 +198,9 @@ export default function CreateTransaction() {
     const handleSubmit = (event) => {
         event.preventDefault();
         const transactionModel: TransactionModel = {
-            issue_date: transaction.time.toString().slice(0, 19),
+            issue_at: transaction.time.toString().slice(0, 19),
             wallet_id: transaction.wallet.id,
-            in_out: transaction.in_out,
+            is_income: transaction.in_out,
             amount: transaction.amount,
             category_id: transaction.category.id,
             subcategory_id: transaction.subcategory.id,
@@ -211,7 +211,7 @@ export default function CreateTransaction() {
         transaction.debts.forEach((element) => {
             const debt: DebtModel = {
                 transaction_id: 0,
-                in_out: element.in_out,
+                is_income: element.in_out,
                 amount: element.amount,
                 identity_id: element.identity.id,
                 detail: element.detail,

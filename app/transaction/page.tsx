@@ -207,12 +207,12 @@ export default function PermanentDrawerLeft() {
             // @ts-expect-error: I know, I know
             value.forEach((element) => {
                 const transaction: TransactionDisplay = {
-                    issue_date: renderDatetime(element.issue_date)!,
-                    wallet: element.wallet.name,
-                    in_out: element.in_out,
+                    issue_date: renderDatetime(element.issue_at)!,
+                    wallet: element.wallet,
+                    in_out: element.is_income,
                     amount: element.amount,
-                    category: element.category.name,
-                    subcategory: element.subcategory.name,
+                    category: element.category,
+                    subcategory: element.subcategory,
                     detail: element.detail,
                     status_id: element.status_id,
                 };

@@ -43,7 +43,7 @@ async function fetchPendingDebtList() {
 
 async function fetchAllDebtList() {
     const response = await axios.get(
-        process.env.NEXT_PUBLIC_API_URL + "/debts",
+        process.env.NEXT_PUBLIC_API_URL + "/debt",
         {
             headers: {
                 Authorization: `Bearer ${process.env.NEXT_PUBLIC_API_KEY}`,
@@ -52,11 +52,13 @@ async function fetchAllDebtList() {
     );
     let result: DebtDisplay[] = [];
 
+    console.log(response.data);
+
     // @ts-ignore
     response.data.forEach((element) => {
         let debt: DebtDisplay = {
             id: element.id,
-            issueDate: element.issue_date,
+            issueDate: element.issue_at,
             isIncome: element.in_out,
             amount: element.amount,
             category: element.category,
@@ -71,16 +73,19 @@ async function fetchAllDebtList() {
 }
 
 async function updateDebtStatus(debt_ids: number[], status_id: number) {
-    const response = await axios.post(
-        process.env.NEXT_PUBLIC_API_URL + "/updateStatusDebt",
-        debt_ids,
+    const cookedData = debt_ids.map((id) => {
+        return {
+            id: id,
+            status_id: status_id,
+        };
+    });
+    const response = await axios.put(
+        process.env.NEXT_PUBLIC_API_URL + "/debt/multi",
+        cookedData,
         {
             headers: {
                 Authorization: `Bearer ${process.env.NEXT_PUBLIC_API_KEY}`,
-            },
-            params: {
-                status_id: status_id,
-            },
+            }
         }
     );
 }

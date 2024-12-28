@@ -141,9 +141,9 @@ export default function CreateTransaction() {
     const handleSubmit = (event) => {
         event.preventDefault();
         const transactionFromModel: TransactionModel = {
-            issue_date: transactionFrom.time.toString().slice(0, 19),
+            issue_at: transactionFrom.time.toString().slice(0, 19),
             wallet_id: transactionFrom.wallet.id,
-            in_out: transactionFrom.in_out,
+            is_income: transactionFrom.in_out,
             amount: transactionFrom.amount,
             category_id: transactionFrom.category.id,
             subcategory_id: transactionFrom.subcategory.id,
@@ -152,9 +152,9 @@ export default function CreateTransaction() {
         };
 
         const transactionToModel: TransactionModel = {
-            issue_date: transactionFrom.time.plus(1000).toString().slice(0, 19),
+            issue_at: transactionFrom.time.plus(1000).toString().slice(0, 19),
             wallet_id: transactionTo.wallet.id,
-            in_out: transactionTo.in_out,
+            is_income: transactionTo.in_out,
             amount: transactionTo.amount,
             category_id: transactionTo.category.id,
             subcategory_id: transactionTo.subcategory.id,

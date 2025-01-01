@@ -13,7 +13,7 @@ interface TransactionModel {
 
 interface TransactionDisplay {
     issue_date: string;
-    in_out: boolean;
+    is_income: boolean;
     wallet: string;
     amount: number;
     category: string;

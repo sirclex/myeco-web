@@ -209,7 +209,7 @@ export default function PermanentDrawerLeft() {
                 const transaction: TransactionDisplay = {
                     issue_date: renderDatetime(element.issue_at)!,
                     wallet: element.wallet,
-                    in_out: element.is_income,
+                    is_income: element.is_income,
                     amount: element.amount,
                     category: element.category,
                     subcategory: element.subcategory,
@@ -483,7 +483,7 @@ export default function PermanentDrawerLeft() {
                                         size={TRANSACTION_COLUMN_GRID_SIZE[2]}
                                     >
                                         <Typography>
-                                            {record.in_out == true
+                                            {record.is_income == true
                                                 ? "+ "
                                                 : "- "}
                                             {Intl.NumberFormat("vi-VN", {

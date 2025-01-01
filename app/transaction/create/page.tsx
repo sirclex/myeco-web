@@ -33,7 +33,7 @@ import {
 } from "@/utils/transactionHandler";
 
 interface Debt {
-    in_out: boolean;
+    is_income: boolean;
     amount: number;
     identity: IdentityDisplay;
     detail: string;
@@ -43,7 +43,7 @@ interface Debt {
 interface Transaction {
     time: DateTime;
     wallet: WalletDisplay;
-    in_out: boolean;
+    is_income: boolean;
     amount: number;
     category: CategoryDisplay;
     subcategory: SubcategoryDisplay;
@@ -83,7 +83,7 @@ export default function CreateTransaction() {
     const [transaction, setTransaction] = useState<Transaction>({
         time: DateTime.now(),
         wallet: { id: -1, name: "" },
-        in_out: false,
+        is_income: false,
         amount: 0,
         category: { id: -1, name: "" },
         subcategory: { id: -1, name: "", category_id: -1 },
@@ -157,7 +157,7 @@ export default function CreateTransaction() {
             debts: [
                 ...transaction.debts,
                 {
-                    in_out: false,
+                    is_income: false,
                     amount: 0,
                     identity: { id: -1, name: "" },
                     detail: "",
@@ -200,7 +200,7 @@ export default function CreateTransaction() {
         const transactionModel: TransactionModel = {
             issue_at: transaction.time.toString().slice(0, 19),
             wallet_id: transaction.wallet.id,
-            is_income: transaction.in_out,
+            is_income: transaction.is_income,
             amount: transaction.amount,
             category_id: transaction.category.id,
             subcategory_id: transaction.subcategory.id,
@@ -211,7 +211,7 @@ export default function CreateTransaction() {
         transaction.debts.forEach((element) => {
             const debt: DebtModel = {
                 transaction_id: 0,
-                is_income: element.in_out,
+                is_income: element.is_income,
                 amount: element.amount,
                 identity_id: element.identity.id,
                 detail: element.detail,
@@ -264,8 +264,8 @@ export default function CreateTransaction() {
                     </Box>
                     <Box sx={{ display: "flex", alignItems: "center" }}>
                         <Checkbox
-                            name="in_out"
-                            checked={transaction.in_out}
+                            name="is_income"
+                            checked={transaction.is_income}
                             onChange={handleChange}
                         />
                         <Typography>Is income?</Typography>
@@ -374,8 +374,8 @@ export default function CreateTransaction() {
                                             }}
                                         >
                                             <Checkbox
-                                                name="in_out"
-                                                checked={debt.in_out}
+                                                name="is_income"
+                                                checked={debt.is_income}
                                                 onChange={(e) =>
                                                     handleDebtChange(index, e)
                                                 }

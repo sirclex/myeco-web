@@ -57,7 +57,7 @@ async function fetchAllDebtList() {
         let debt: DebtDisplay = {
             id: element.id,
             issueDate: element.issue_at,
-            isIncome: element.in_out,
+            isIncome: element.is_income,
             amount: element.amount,
             category: element.category,
             subcategory: element.subcategory,

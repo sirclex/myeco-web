@@ -28,7 +28,7 @@ import {
 } from "@/utils/transactionHandler";
 
 interface Debt {
-    in_out: boolean;
+    is_income: boolean;
     amount: number;
     identity: IdentityDisplay;
     detail: string;
@@ -38,7 +38,7 @@ interface Debt {
 interface Transaction {
     time: DateTime;
     wallet: WalletDisplay;
-    in_out: boolean;
+    is_income: boolean;
     amount: number;
     category: CategoryDisplay;
     subcategory: SubcategoryDisplay;
@@ -66,7 +66,7 @@ export default function CreateTransaction() {
     const [transactionFrom, setTransactionFrom] = useState<Transaction>({
         time: DateTime.now(),
         wallet: { id: -1, name: "" },
-        in_out: false,
+        is_income: false,
         amount: 0,
         category: { id: 5, name: "Misc" },
         subcategory: { id: 15, name: "Switch", category_id: 5 },
@@ -78,7 +78,7 @@ export default function CreateTransaction() {
     const [transactionTo, setTransactionTo] = useState<Transaction>({
         time: DateTime.now(),
         wallet: { id: -1, name: "" },
-        in_out: true,
+        is_income: true,
         amount: 0,
         category: { id: 5, name: "Misc" },
         subcategory: { id: 15, name: "Switch", category_id: 5 },
@@ -143,7 +143,7 @@ export default function CreateTransaction() {
         const transactionFromModel: TransactionModel = {
             issue_at: transactionFrom.time.toString().slice(0, 19),
             wallet_id: transactionFrom.wallet.id,
-            is_income: transactionFrom.in_out,
+            is_income: transactionFrom.is_income,
             amount: transactionFrom.amount,
             category_id: transactionFrom.category.id,
             subcategory_id: transactionFrom.subcategory.id,
@@ -154,7 +154,7 @@ export default function CreateTransaction() {
         const transactionToModel: TransactionModel = {
             issue_at: transactionFrom.time.plus(1000).toString().slice(0, 19),
             wallet_id: transactionTo.wallet.id,
-            is_income: transactionTo.in_out,
+            is_income: transactionTo.is_income,
             amount: transactionTo.amount,
             category_id: transactionTo.category.id,
             subcategory_id: transactionTo.subcategory.id,

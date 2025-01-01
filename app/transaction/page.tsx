@@ -386,7 +386,7 @@ export default function PermanentDrawerLeft() {
                                     >
                                         <Grid size={4}>
                                             <Typography>
-                                                {record.name}
+                                                {record.identity}
                                             </Typography>
                                         </Grid>
                                         <Grid size={4}>
@@ -395,7 +395,7 @@ export default function PermanentDrawerLeft() {
                                             </Typography>
                                         </Grid>
                                         <Grid size={4}>
-                                            {renderFlow(record.isIncome)}
+                                            {renderFlow(record.amount > 0)}
                                         </Grid>
                                     </Grid>
                                     <Divider />

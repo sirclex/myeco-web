@@ -30,7 +30,7 @@ async function fetchIdentityList() {
 async function addIdentity(name: string) {
     axios({
         method: "post",
-        url: process.env.NEXT_PUBLIC_API_URL + "/identity/create",
+        url: process.env.NEXT_PUBLIC_API_URL + "/identity",
         headers: {
             Authorization: `Bearer ${process.env.NEXT_PUBLIC_API_KEY}`,
         },

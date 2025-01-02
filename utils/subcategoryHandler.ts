@@ -24,13 +24,13 @@ async function fetchSubcategory(category_id: number) {
 async function addSubcategory(name: string, categoryId: number) {
     axios({
         method: "post",
-        url: process.env.NEXT_PUBLIC_API_URL + "/subcategory/create",
+        url: process.env.NEXT_PUBLIC_API_URL + "/subcategory",
         headers: {
             Authorization: `Bearer ${process.env.NEXT_PUBLIC_API_KEY}`,
         },
         data: {
             name: name,
-            transaction_category_id: categoryId
+            category_id: categoryId
         },
     });
 }

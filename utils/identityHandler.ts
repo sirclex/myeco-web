@@ -6,11 +6,12 @@ interface IdentityDisplay {
 }
 
 async function fetchIdentityList() {
-    const response = await axios.get(process.env.NEXT_PUBLIC_API_URL + "/identities",
+    const response = await axios.get(
+        process.env.NEXT_PUBLIC_API_URL + "/identity",
         {
             headers: {
-                "Authorization": `Bearer ${process.env.NEXT_PUBLIC_API_KEY}`
-            }
+                Authorization: `Bearer ${process.env.NEXT_PUBLIC_API_KEY}`,
+            },
         }
     );
     let result: IdentityDisplay[] = [];
@@ -26,5 +27,19 @@ async function fetchIdentityList() {
     return result;
 }
 
-export { fetchIdentityList };
+async function addIdentity(name: string) {
+    axios({
+        method: "post",
+        url: process.env.NEXT_PUBLIC_API_URL + "/identity",
+        headers: {
+            Authorization: `Bearer ${process.env.NEXT_PUBLIC_API_KEY}`,
+        },
+        data: {
+            name: name,
+            type_id: 1
+        },
+    })
+}
+
+export { fetchIdentityList, addIdentity };
 export type { IdentityDisplay };

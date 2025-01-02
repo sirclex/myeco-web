@@ -8,7 +8,7 @@ interface SubcategoryDisplay {
 
 async function fetchSubcategory(category_id: number) {
     const response = await axios.get(
-        process.env.NEXT_PUBLIC_API_URL + "/subcategories",
+        process.env.NEXT_PUBLIC_API_URL + "/subcategory",
         {
             headers: {
                 Authorization: `Bearer ${process.env.NEXT_PUBLIC_API_KEY}`,
@@ -21,5 +21,19 @@ async function fetchSubcategory(category_id: number) {
     return response.data;
 }
 
-export { fetchSubcategory };
+async function addSubcategory(name: string, categoryId: number) {
+    axios({
+        method: "post",
+        url: process.env.NEXT_PUBLIC_API_URL + "/subcategory",
+        headers: {
+            Authorization: `Bearer ${process.env.NEXT_PUBLIC_API_KEY}`,
+        },
+        data: {
+            name: name,
+            category_id: categoryId
+        },
+    });
+}
+
+export { fetchSubcategory, addSubcategory };
 export type { SubcategoryDisplay };

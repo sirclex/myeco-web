@@ -18,8 +18,43 @@ import {
     getTransactions,
     TransactionDisplay,
 } from "@/utils/transactionHandler";
+
+import {
+    fetchPendingDebtList,
+    fetchAllDebtList,
+    updateDebtStatus,
+    PendingDebtDisplay,
+    DebtDisplay,
+} from "@/utils/debtHandler";
+
+import {
+    fetchIdentityList,
+    addIdentity,
+    IdentityDisplay,
+} from "@/utils/identityHandler";
+
+import {
+    fetchCategory,
+    CategoryDisplay,
+    addCategory,
+} from "@/utils/categoryHandler";
+
+import { addSubcategory } from "@/utils/subcategoryHandler";
+
 import Grid from "@mui/material/Grid2";
-import { Button, Checkbox, Chip, Divider } from "@mui/material";
+import {
+    Button,
+    Checkbox,
+    Chip,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogContentText,
+    DialogTitle,
+    Divider,
+    Stack,
+    TextField,
+} from "@mui/material";
 import {
     DashboardOutlined,
     ReceiptLongOutlined,
@@ -27,6 +62,7 @@ import {
     SubscriptionsOutlined,
     PermIdentityOutlined,
     AccountBalanceWalletOutlined,
+    CategoryOutlined,
 } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
 
@@ -39,7 +75,34 @@ const dashboardItem = [
     { id: 4, name: "Subscription", icon: <SubscriptionsOutlined /> },
     { id: 5, name: "Wallet", icon: <AccountBalanceWalletOutlined /> },
     { id: 6, name: "Identity", icon: <PermIdentityOutlined /> },
+    { id: 7, name: "Category", icon: <CategoryOutlined /> },
 ];
+
+function renderFlow(isIncome: boolean) {
+    if (isIncome) {
+        return (
+            <Chip
+                label="Income"
+                sx={{
+                    backgroundColor: "#E5FAE6",
+                    color: "#297B32",
+                    fontWeight: "bold",
+                }}
+            />
+        );
+    } else {
+        return (
+            <Chip
+                label="Expense"
+                sx={{
+                    backgroundColor: "#FFEBEB",
+                    color: "#E83838",
+                    fontWeight: "bold",
+                }}
+            />
+        );
+    }
+}
 
 function renderStatus(value: number) {
     if (value == 2)
@@ -78,12 +141,12 @@ function renderStatus(value: number) {
 
 function renderDatetime(value: string) {
     const datetime = DateTime.fromISO(value).setZone("system");
-    return datetime.toLocaleString(DateTime.DATETIME_MED_WITH_WEEKDAY);
+    return datetime.toFormat("ccc, LLL d, yyyy, H:mm");
 }
 
-const COLUMN_GRID_SIZE = [
+const TRANSACTION_COLUMN_GRID_SIZE = [
     0.4, // Checkbox
-    2, // Time
+    1.5, // Time
     1.5, // Amount
     1.25, // Wallet
     1, // Category
@@ -92,24 +155,64 @@ const COLUMN_GRID_SIZE = [
     1, // Status
 ];
 
+const DEBT_COLUMN_GRID_SIZE = [
+    0.4, // Checkbox
+    1.5, // Time
+    1.5, // Amount
+    1.25, // Identity
+    1, // Category
+    1, // Subcategory
+    3, // Detail
+    1, // Status
+];
+
+const IDENTITY_COLUMN_GRID_SIZE = [
+    0.4, // Checkbox
+    1.5, // Name
+];
+
+const CATEGORY_COLUMN_GRID_SIZE = [
+    0.4, // Checkbox
+    1.5, // Name
+    10, // Action
+];
+
 export default function PermanentDrawerLeft() {
-    const rounter = useRouter();
+    const router = useRouter();
     const [transactions, setTransactions] = useState<TransactionDisplay[]>([]);
+    const [pendingDebts, setPendingDebts] = useState<PendingDebtDisplay[]>([]);
+    const [identities, setIdentities] = useState<IdentityDisplay[]>([]);
+    const [debts, setDebts] = useState<DebtDisplay[]>([]);
+    const [selectedDebts, setSelectedDebts] = useState<number[]>([]);
+    const [triggerReload, setTriggerReload] = useState(false);
     const [show, setShow] = useState(0);
+    const [creatingIdentity, setCreatingIdentity] = useState(false);
+    const [newIdentityName, setNewIdentityName] = useState("");
+    const [categories, setCategories] = useState<CategoryDisplay[]>([]);
+    const [creatingCategory, setCreatingCategory] = useState(false);
+    const [newCategoryName, setNewCategoryName] = useState("");
+    const [selectedCategoryId, setSelectedCategoryId] = useState(0);
+    const [creatingSubcategory, setCreatingSubcategory] = useState(false);
+    const [newSubcategoryName, setNewSubcategoryName] = useState("");
 
     useEffect(() => {
+        const token = sessionStorage.getItem("token");
+        if (!token || token === "") {
+            router.push("/login");
+        }
+
         getTransactions().then((value) => {
             const transactionsDisplay: TransactionDisplay[] = [];
 
             // @ts-expect-error: I know, I know
             value.forEach((element) => {
                 const transaction: TransactionDisplay = {
-                    issue_date: renderDatetime(element.issue_date)!,
-                    wallet: element.wallet.name,
-                    in_out: element.in_out,
+                    issue_date: renderDatetime(element.issue_at)!,
+                    wallet: element.wallet,
+                    is_income: element.is_income,
                     amount: element.amount,
-                    category: element.category.name,
-                    subcategory: element.subcategory.name,
+                    category: element.category,
+                    subcategory: element.subcategory,
                     detail: element.detail,
                     status_id: element.status_id,
                 };
@@ -118,10 +221,99 @@ export default function PermanentDrawerLeft() {
 
             setTransactions(transactionsDisplay);
         });
-    }, []);
+
+        fetchPendingDebtList().then((value) => setPendingDebts(value));
+
+        fetchAllDebtList().then((value) => setDebts(value));
+
+        fetchIdentityList().then((value) => setIdentities(value));
+
+        fetchCategory().then((value) => setCategories(value));
+    }, [triggerReload, router]);
 
     const handleAddTransaction = () => {
-        rounter.push("/transaction/create");
+        router.push("/transaction/create");
+    };
+
+    const handleAddSwtichTransaction = () => {
+        router.push("/transaction/switch");
+    };
+
+    const handleDebtCheckboxChange = (id: number) => {
+        setSelectedDebts((prevSelected) =>
+            prevSelected.includes(id)
+                ? prevSelected.filter((recordId) => recordId !== id)
+                : [...prevSelected, id]
+        );
+    };
+
+    const handleUpdateStatus = (status_id: number) => {
+        updateDebtStatus(selectedDebts, status_id);
+        setTriggerReload(!triggerReload);
+    };
+
+    // Create Identity
+    const handleOpenCreateIdentity = () => {
+        setCreatingIdentity(true);
+    };
+
+    const handleCloseCreateIdentity = () => {
+        setCreatingIdentity(false);
+    };
+
+    // @ts-expect-error: I know, I know
+    const handleNewIdentityNameChange = (event) => {
+        setNewIdentityName(event.target.value);
+    };
+
+    const handleSubmitNewIdentity = () => {
+        addIdentity(newIdentityName);
+        setNewIdentityName("");
+        handleCloseCreateIdentity();
+        setTriggerReload(!triggerReload);
+    };
+
+    // Create Category
+    const handleOpenCreateCategory = () => {
+        setCreatingCategory(true);
+    };
+
+    const handleCloseCreateCategory = () => {
+        setCreatingCategory(false);
+    };
+
+    // @ts-expect-error: I know, I know
+    const handleNewCategoryNameChange = (event) => {
+        setNewCategoryName(event.target.value);
+    };
+
+    const handleSubmitNewCategory = () => {
+        addCategory(newCategoryName);
+        setNewCategoryName("");
+        handleCloseCreateCategory();
+        setTriggerReload(!triggerReload);
+    };
+
+    // Create Subcategory
+    const handleOpenCreateSubcategory = (categoryId: number) => {
+        setSelectedCategoryId(categoryId);
+        setCreatingSubcategory(true);
+    };
+
+    const handleCloseCreateSubcategory = () => {
+        setCreatingSubcategory(false);
+    };
+
+    // @ts-expect-error: I know, I know
+    const handleNewSubcategoryNameChange = (event) => {
+        setNewSubcategoryName(event.target.value);
+    };
+
+    const handleSubmitNewSubcategory = () => {
+        addSubcategory(newSubcategoryName, selectedCategoryId);
+        setNewSubcategoryName("");
+        handleCloseCreateSubcategory();
+        setTriggerReload(!triggerReload);
     };
 
     return (
@@ -164,88 +356,109 @@ export default function PermanentDrawerLeft() {
                     ))}
                 </List>
             </Drawer>
-            {show == 0 && (
+            {show == 0 && ( // Dashboard view
                 <Box
                     component="main"
                     sx={{ flexGrow: 1, bgcolor: "background.default", p: 3 }}
                 >
                     <Toolbar />
-                    <Typography sx={{ marginBottom: 2 }}>
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit,
-                        sed do eiusmod tempor incididunt ut labore et dolore
-                        magna aliqua. Rhoncus dolor purus non enim praesent
-                        elementum facilisis leo vel. Risus at ultrices mi tempus
-                        imperdiet. Semper risus in hendrerit gravida rutrum
-                        quisque non tellus. Convallis convallis tellus id
-                        interdum velit laoreet id donec ultrices. Odio morbi
-                        quis commodo odio aenean sed adipiscing. Amet nisl
-                        suscipit adipiscing bibendum est ultricies integer quis.
-                        Cursus euismod quis viverra nibh cras. Metus vulputate
-                        eu scelerisque felis imperdiet proin fermentum leo.
-                        Mauris commodo quis imperdiet massa tincidunt. Cras
-                        tincidunt lobortis feugiat vivamus at augue. At augue
-                        eget arcu dictum varius duis at consectetur lorem. Velit
-                        sed ullamcorper morbi tincidunt. Lorem donec massa
-                        sapien faucibus et molestie ac.
-                    </Typography>
-                    <Typography sx={{ marginBottom: 2 }}>
-                        Consequat mauris nunc congue nisi vitae suscipit.
-                        Fringilla est ullamcorper eget nulla facilisi etiam
-                        dignissim diam. Pulvinar elementum integer enim neque
-                        volutpat ac tincidunt. Ornare suspendisse sed nisi lacus
-                        sed viverra tellus. Purus sit amet volutpat consequat
-                        mauris. Elementum eu facilisis sed odio morbi. Euismod
-                        lacinia at quis risus sed vulputate odio. Morbi
-                        tincidunt ornare massa eget egestas purus viverra
-                        accumsan in. In hendrerit gravida rutrum quisque non
-                        tellus orci ac. Pellentesque nec nam aliquam sem et
-                        tortor. Habitant morbi tristique senectus et. Adipiscing
-                        elit duis tristique sollicitudin nibh sit. Ornare aenean
-                        euismod elementum nisi quis eleifend. Commodo viverra
-                        maecenas accumsan lacus vel facilisis. Nulla posuere
-                        sollicitudin aliquam ultrices sagittis orci a.
-                    </Typography>
+                    <Box sx={{ width: "25%" }}>
+                        <Divider />
+                        <Grid container spacing={4} bgcolor={"#EDF8FD"}>
+                            <Grid size={4}>
+                                <Typography>Name</Typography>
+                            </Grid>
+                            <Grid size={4}>
+                                <Typography>Amount</Typography>
+                            </Grid>
+                            <Grid size={4}>
+                                <Typography>Flow</Typography>
+                            </Grid>
+                        </Grid>
+                        <Divider />
+                        {pendingDebts.length > 0 ? (
+                            pendingDebts.map((record, index) => (
+                                <Box key={index}>
+                                    <Grid
+                                        container
+                                        spacing={4}
+                                        alignItems="center"
+                                    >
+                                        <Grid size={4}>
+                                            <Typography>
+                                                {record.identity}
+                                            </Typography>
+                                        </Grid>
+                                        <Grid size={4}>
+                                            <Typography>
+                                                {record.amount}
+                                            </Typography>
+                                        </Grid>
+                                        <Grid size={4}>
+                                            {renderFlow(record.amount > 0)}
+                                        </Grid>
+                                    </Grid>
+                                    <Divider />
+                                </Box>
+                            ))
+                        ) : (
+                            <Typography>No debts</Typography>
+                        )}
+                    </Box>
                 </Box>
             )}
-            {show == 1 && (
+            {show == 1 && ( // Transaction view
                 <Box sx={{ width: "100%" }}>
                     <Toolbar />
                     <Toolbar disableGutters>
-                        <Button
-                            variant="contained"
-                            onClick={handleAddTransaction}
-                        >
-                            Add Transaction
-                        </Button>
+                        <Stack direction={"row"} gap={2}>
+                            <Button
+                                variant="contained"
+                                onClick={handleAddTransaction}
+                            >
+                                Add Transaction
+                            </Button>
+                            <Button
+                                variant="contained"
+                                onClick={handleAddSwtichTransaction}
+                            >
+                                Add Switch Transaction
+                            </Button>
+                        </Stack>
                     </Toolbar>
                     <Box>
                         <Divider />
-                        <Grid container spacing={4} alignItems="center" bgcolor={"#EDF8FD"}>
-                            <Grid size={COLUMN_GRID_SIZE[0]}>
+                        <Grid
+                            container
+                            spacing={4}
+                            alignItems="center"
+                            bgcolor={"#EDF8FD"}
+                        >
+                            <Grid size={TRANSACTION_COLUMN_GRID_SIZE[0]}>
                                 <Checkbox />
                             </Grid>
-                            <Grid size={COLUMN_GRID_SIZE[1]}>
+                            <Grid size={TRANSACTION_COLUMN_GRID_SIZE[1]}>
                                 <Typography>Time</Typography>
                             </Grid>
-                            <Grid size={COLUMN_GRID_SIZE[2]}>
+                            <Grid size={TRANSACTION_COLUMN_GRID_SIZE[2]}>
                                 <Typography>Amount</Typography>
                             </Grid>
-                            <Grid size={COLUMN_GRID_SIZE[3]}>
+                            <Grid size={TRANSACTION_COLUMN_GRID_SIZE[3]}>
                                 <Typography>Wallet</Typography>
                             </Grid>
-                            <Grid size={COLUMN_GRID_SIZE[4]}>
+                            <Grid size={TRANSACTION_COLUMN_GRID_SIZE[4]}>
                                 <Typography>Category</Typography>
                             </Grid>
-                            <Grid size={COLUMN_GRID_SIZE[5]}>
+                            <Grid size={TRANSACTION_COLUMN_GRID_SIZE[5]}>
                                 <Typography>Subcategory</Typography>
                             </Grid>
-                            <Grid size={COLUMN_GRID_SIZE[6]}>
+                            <Grid size={TRANSACTION_COLUMN_GRID_SIZE[6]}>
                                 <Typography>Detail</Typography>
                             </Grid>
-                            <Grid size={COLUMN_GRID_SIZE[7]}>
+                            <Grid size={TRANSACTION_COLUMN_GRID_SIZE[7]}>
                                 <Typography>Status</Typography>
                             </Grid>
-                            <Grid size={COLUMN_GRID_SIZE[8]}>
+                            <Grid size={TRANSACTION_COLUMN_GRID_SIZE[8]}>
                                 <Typography></Typography>
                             </Grid>
                         </Grid>
@@ -253,22 +466,24 @@ export default function PermanentDrawerLeft() {
 
                         {transactions.map((record, index) => (
                             <Box key={index}>
-                                <Grid
-                                    container
-                                    spacing={4}
-                                    alignItems="center"
-                                >
-                                    <Grid size={COLUMN_GRID_SIZE[0]}>
+                                <Grid container spacing={4} alignItems="center">
+                                    <Grid
+                                        size={TRANSACTION_COLUMN_GRID_SIZE[0]}
+                                    >
                                         <Checkbox />
                                     </Grid>
-                                    <Grid size={COLUMN_GRID_SIZE[1]}>
+                                    <Grid
+                                        size={TRANSACTION_COLUMN_GRID_SIZE[1]}
+                                    >
                                         <Typography>
                                             {record.issue_date}
                                         </Typography>
                                     </Grid>
-                                    <Grid size={COLUMN_GRID_SIZE[2]}>
+                                    <Grid
+                                        size={TRANSACTION_COLUMN_GRID_SIZE[2]}
+                                    >
                                         <Typography>
-                                            {record.in_out == true
+                                            {record.is_income == true
                                                 ? "+ "
                                                 : "- "}
                                             {Intl.NumberFormat("vi-VN", {
@@ -277,27 +492,34 @@ export default function PermanentDrawerLeft() {
                                             }).format(record.amount)}
                                         </Typography>
                                     </Grid>
-                                    <Grid size={COLUMN_GRID_SIZE[3]}>
+                                    <Grid
+                                        size={TRANSACTION_COLUMN_GRID_SIZE[3]}
+                                    >
                                         <Typography>{record.wallet}</Typography>
                                     </Grid>
-                                    <Grid size={COLUMN_GRID_SIZE[4]}>
+                                    <Grid
+                                        size={TRANSACTION_COLUMN_GRID_SIZE[4]}
+                                    >
                                         <Typography>
                                             {record.category}
                                         </Typography>
                                     </Grid>
-                                    <Grid size={COLUMN_GRID_SIZE[5]}>
+                                    <Grid
+                                        size={TRANSACTION_COLUMN_GRID_SIZE[5]}
+                                    >
                                         <Typography>
                                             {record.subcategory}
                                         </Typography>
                                     </Grid>
-                                    <Grid size={COLUMN_GRID_SIZE[6]}>
+                                    <Grid
+                                        size={TRANSACTION_COLUMN_GRID_SIZE[6]}
+                                    >
                                         <Typography>{record.detail}</Typography>
                                     </Grid>
-                                    <Grid size={COLUMN_GRID_SIZE[7]}>
+                                    <Grid
+                                        size={TRANSACTION_COLUMN_GRID_SIZE[7]}
+                                    >
                                         {renderStatus(record.status_id)}
-                                    </Grid>
-                                    <Grid size={COLUMN_GRID_SIZE[8]}>
-                                        <Typography></Typography>
                                     </Grid>
                                 </Grid>
                                 <Divider />
@@ -306,28 +528,330 @@ export default function PermanentDrawerLeft() {
                     </Box>
                 </Box>
             )}
-            {show == 2 && (
-                <Box>
+            {show == 2 && ( // Debt view
+                <Box sx={{ width: "100%" }}>
                     <Toolbar />
-                    <Box>Debt</Box>
+                    <Toolbar disableGutters>
+                        <Stack direction={"row"} spacing={2}>
+                            <Button
+                                variant="outlined"
+                                onClick={() => handleUpdateStatus(2)}
+                            >
+                                Mark as Done
+                            </Button>
+                            <Button
+                                variant="outlined"
+                                onClick={() => handleUpdateStatus(1)}
+                            >
+                                Mark as Pending
+                            </Button>
+                        </Stack>
+                    </Toolbar>
+                    <Box>
+                        <Divider />
+                        <Grid
+                            container
+                            spacing={4}
+                            alignItems="center"
+                            bgcolor={"#EDF8FD"}
+                        >
+                            <Grid size={DEBT_COLUMN_GRID_SIZE[0]}>
+                                <Checkbox />
+                            </Grid>
+                            <Grid size={DEBT_COLUMN_GRID_SIZE[1]}>
+                                <Typography>Time</Typography>
+                            </Grid>
+                            <Grid size={DEBT_COLUMN_GRID_SIZE[2]}>
+                                <Typography>Amount</Typography>
+                            </Grid>
+                            <Grid size={DEBT_COLUMN_GRID_SIZE[3]}>
+                                <Typography>Identity</Typography>
+                            </Grid>
+                            <Grid size={DEBT_COLUMN_GRID_SIZE[4]}>
+                                <Typography>Category</Typography>
+                            </Grid>
+                            <Grid size={DEBT_COLUMN_GRID_SIZE[5]}>
+                                <Typography>Subcategory</Typography>
+                            </Grid>
+                            <Grid size={DEBT_COLUMN_GRID_SIZE[6]}>
+                                <Typography>Detail</Typography>
+                            </Grid>
+                            <Grid size={DEBT_COLUMN_GRID_SIZE[7]}>
+                                <Typography>Status</Typography>
+                            </Grid>
+                        </Grid>
+                        <Divider />
+
+                        {debts.map((record, index) => (
+                            <Box key={index}>
+                                <Grid container spacing={4} alignItems="center">
+                                    <Grid size={DEBT_COLUMN_GRID_SIZE[0]}>
+                                        <Checkbox
+                                            checked={selectedDebts.includes(
+                                                record.id
+                                            )}
+                                            onChange={() =>
+                                                handleDebtCheckboxChange(
+                                                    record.id
+                                                )
+                                            }
+                                        />
+                                    </Grid>
+                                    <Grid size={DEBT_COLUMN_GRID_SIZE[1]}>
+                                        <Typography>
+                                            {renderDatetime(record.issueDate)}
+                                        </Typography>
+                                    </Grid>
+                                    <Grid size={DEBT_COLUMN_GRID_SIZE[2]}>
+                                        <Typography>
+                                            {record.isIncome == true
+                                                ? "+ "
+                                                : "- "}
+                                            {Intl.NumberFormat("vi-VN", {
+                                                style: "currency",
+                                                currency: "VND",
+                                            }).format(record.amount)}
+                                        </Typography>
+                                    </Grid>
+                                    <Grid size={DEBT_COLUMN_GRID_SIZE[3]}>
+                                        <Typography>
+                                            {record.identity}
+                                        </Typography>
+                                    </Grid>
+                                    <Grid size={DEBT_COLUMN_GRID_SIZE[4]}>
+                                        <Typography>
+                                            {record.category}
+                                        </Typography>
+                                    </Grid>
+                                    <Grid size={DEBT_COLUMN_GRID_SIZE[5]}>
+                                        <Typography>
+                                            {record.subcategory}
+                                        </Typography>
+                                    </Grid>
+                                    <Grid size={DEBT_COLUMN_GRID_SIZE[6]}>
+                                        <Typography>{record.detail}</Typography>
+                                    </Grid>
+                                    <Grid size={DEBT_COLUMN_GRID_SIZE[7]}>
+                                        {renderStatus(record.statusId)}
+                                    </Grid>
+                                </Grid>
+                                <Divider />
+                            </Box>
+                        ))}
+                    </Box>
                 </Box>
             )}
-            {show == 3 && (
+            {show == 3 && ( // Subscription view
                 <Box>
                     <Toolbar />
                     <Box>Subscription</Box>
                 </Box>
             )}
-            {show == 4 && (
+            {show == 4 && ( // Wallet view
                 <Box>
                     <Toolbar />
                     <Box>Wallet</Box>
                 </Box>
             )}
-            {show == 5 && (
-                <Box>
+            {show == 5 && ( // Identity view
+                <Box sx={{ width: "100%" }}>
                     <Toolbar />
-                    <Box>Identity</Box>
+                    <Toolbar disableGutters>
+                        <Stack direction={"row"} gap={2}>
+                            <Button
+                                variant="contained"
+                                onClick={handleOpenCreateIdentity}
+                            >
+                                Add Identity
+                            </Button>
+                        </Stack>
+                    </Toolbar>
+                    <Box>
+                        <Divider />
+                        <Grid
+                            container
+                            spacing={4}
+                            alignItems="center"
+                            bgcolor={"#EDF8FD"}
+                        >
+                            <Grid size={IDENTITY_COLUMN_GRID_SIZE[0]}>
+                                <Checkbox />
+                            </Grid>
+                            <Grid size={IDENTITY_COLUMN_GRID_SIZE[1]}>
+                                <Typography>Name</Typography>
+                            </Grid>
+                        </Grid>
+                        <Divider />
+
+                        {identities.map((record, index) => (
+                            <Box key={index}>
+                                <Grid container spacing={4} alignItems="center">
+                                    <Grid size={IDENTITY_COLUMN_GRID_SIZE[0]}>
+                                        <Checkbox />
+                                    </Grid>
+                                    <Grid size={IDENTITY_COLUMN_GRID_SIZE[1]}>
+                                        <Typography>{record.name}</Typography>
+                                    </Grid>
+                                </Grid>
+                                <Divider />
+                            </Box>
+                        ))}
+
+                        <Dialog
+                            open={creatingIdentity}
+                            onClose={handleCloseCreateIdentity}
+                        >
+                            <DialogTitle>Add new identity</DialogTitle>
+                            <DialogContent>
+                                <DialogContentText>
+                                    Please enter identity name:
+                                </DialogContentText>
+                                <TextField
+                                    autoFocus
+                                    margin="dense"
+                                    label="Name"
+                                    type="text"
+                                    fullWidth
+                                    value={newIdentityName}
+                                    onChange={handleNewIdentityNameChange}
+                                />
+                            </DialogContent>
+                            <DialogActions>
+                                <Button onClick={handleCloseCreateIdentity}>
+                                    Cancel
+                                </Button>
+                                <Button onClick={handleSubmitNewIdentity}>
+                                    Confirm
+                                </Button>
+                            </DialogActions>
+                        </Dialog>
+                    </Box>
+                </Box>
+            )}
+            {show == 6 && ( // Wallet view
+                <Box sx={{ width: "100%" }}>
+                    <Toolbar />
+                    <Toolbar disableGutters>
+                        <Stack direction={"row"} gap={2}>
+                            <Button
+                                variant="contained"
+                                onClick={handleOpenCreateCategory}
+                            >
+                                Add Category
+                            </Button>
+                        </Stack>
+                    </Toolbar>
+                    <Box>
+                        <Divider />
+                        <Grid
+                            container
+                            spacing={4}
+                            alignItems="center"
+                            bgcolor={"#EDF8FD"}
+                        >
+                            <Grid size={CATEGORY_COLUMN_GRID_SIZE[0]}>
+                                <Checkbox />
+                            </Grid>
+                            <Grid size={CATEGORY_COLUMN_GRID_SIZE[1]}>
+                                <Typography>Name</Typography>
+                            </Grid>
+                            <Grid size={CATEGORY_COLUMN_GRID_SIZE[2]}>
+                                <Typography>Action</Typography>
+                            </Grid>
+                        </Grid>
+                        <Divider />
+
+                        {categories.map((record, index) => (
+                            <Box key={index}>
+                                <Grid container spacing={4} alignItems="center">
+                                    <Grid size={CATEGORY_COLUMN_GRID_SIZE[0]}>
+                                        <Checkbox />
+                                    </Grid>
+                                    <Grid size={CATEGORY_COLUMN_GRID_SIZE[1]}>
+                                        <Typography>{record.name}</Typography>
+                                    </Grid>
+                                    <Grid size={CATEGORY_COLUMN_GRID_SIZE[2]}>
+                                        <Stack direction="row" spacing={1}>
+                                            <Button
+                                                variant="contained"
+                                                onClick={() =>
+                                                    handleOpenCreateSubcategory(
+                                                        record.id
+                                                    )
+                                                }
+                                            >
+                                                + Sub
+                                            </Button>
+                                            {/* <Button
+                                                variant="contained"
+                                                color="error"
+                                            >
+                                                Delete
+                                            </Button> */}
+                                        </Stack>
+                                    </Grid>
+                                </Grid>
+                                <Divider />
+                            </Box>
+                        ))}
+
+                        <Dialog
+                            open={creatingCategory}
+                            onClose={handleCloseCreateCategory}
+                        >
+                            <DialogTitle>Add new category</DialogTitle>
+                            <DialogContent>
+                                <DialogContentText>
+                                    Please enter category name:
+                                </DialogContentText>
+                                <TextField
+                                    autoFocus
+                                    margin="dense"
+                                    label="Name"
+                                    type="text"
+                                    fullWidth
+                                    value={newCategoryName}
+                                    onChange={handleNewCategoryNameChange}
+                                />
+                            </DialogContent>
+                            <DialogActions>
+                                <Button onClick={handleCloseCreateCategory}>
+                                    Cancel
+                                </Button>
+                                <Button onClick={handleSubmitNewCategory}>
+                                    Confirm
+                                </Button>
+                            </DialogActions>
+                        </Dialog>
+                        <Dialog
+                            open={creatingSubcategory}
+                            onClose={handleCloseCreateSubcategory}
+                        >
+                            <DialogTitle>Add new category</DialogTitle>
+                            <DialogContent>
+                                <DialogContentText>
+                                    Please enter subcategory name:
+                                </DialogContentText>
+                                <TextField
+                                    autoFocus
+                                    margin="dense"
+                                    label="Subcategory name"
+                                    type="text"
+                                    fullWidth
+                                    value={newSubcategoryName}
+                                    onChange={handleNewSubcategoryNameChange}
+                                />
+                            </DialogContent>
+                            <DialogActions>
+                                <Button onClick={handleCloseCreateSubcategory}>
+                                    Cancel
+                                </Button>
+                                <Button onClick={handleSubmitNewSubcategory}>
+                                    Confirm
+                                </Button>
+                            </DialogActions>
+                        </Dialog>
+                    </Box>
                 </Box>
             )}
         </Box>

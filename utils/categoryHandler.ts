@@ -20,7 +20,7 @@ async function fetchCategory() {
 async function addCategory(name: string) {
     axios({
         method: "post",
-        url: process.env.NEXT_PUBLIC_API_URL + "/category/create",
+        url: process.env.NEXT_PUBLIC_API_URL + "/category",
         headers: {
             Authorization: `Bearer ${process.env.NEXT_PUBLIC_API_KEY}`,
         },

@@ -57,7 +57,7 @@ async function getTransactions(offset: number, limit: number) {
             },
             params: {
                 offset: offset,
-                limit: 1000
+                limit: limit
             }
         }
     );

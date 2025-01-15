@@ -244,7 +244,7 @@ export default function PermanentDrawerLeft() {
         fetchIdentityList().then((value) => setIdentities(value));
 
         fetchCategory().then((value) => setCategories(value));
-    }, [triggerReload, router]);
+    }, [triggerReload, router, transactionPage]);
 
     const handleAddTransaction = () => {
         router.push("/transaction/create");
@@ -332,28 +332,6 @@ export default function PermanentDrawerLeft() {
     };
 
     const handleTransactionPageChange = (event: React.ChangeEvent<unknown>, page: number) => {
-        let paginRange = calculatePagination(PAGE_SIZE.TRANSACTION, page)
-        getTransactions(paginRange.start, paginRange.end).then((value) => {
-            const transactionsDisplay: TransactionDisplay[] = [];
-
-            // @ts-expect-error: I know, I know
-            value.forEach((element) => {
-                const transaction: TransactionDisplay = {
-                    issue_date: renderDatetime(element.issue_at)!,
-                    wallet: element.wallet,
-                    is_income: element.is_income,
-                    amount: element.amount,
-                    category: element.category,
-                    subcategory: element.subcategory,
-                    detail: element.detail,
-                    status_id: element.status_id,
-                };
-                transactionsDisplay.push(transaction);
-            });
-
-            setTransactions(transactionsDisplay);
-        });
-
         setTransactionPage(page)
     };
 

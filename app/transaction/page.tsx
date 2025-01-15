@@ -12,10 +12,12 @@ import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
+import Pagination from "@mui/material/Pagination";
 import { useEffect, useState } from "react";
 
 import {
     getTransactions,
+    getTotalTransaction,
     TransactionDisplay,
 } from "@/utils/transactionHandler";
 
@@ -65,6 +67,9 @@ import {
     CategoryOutlined,
 } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
+
+import { PAGE_SIZE } from "@/utils/constants";
+import { calculatePagination } from "@/utils/calcPagination";
 
 const drawerWidth = 240;
 
@@ -195,13 +200,23 @@ export default function PermanentDrawerLeft() {
     const [creatingSubcategory, setCreatingSubcategory] = useState(false);
     const [newSubcategoryName, setNewSubcategoryName] = useState("");
 
+    // Pagination
+    const [totalTransactionPage, setTotalTransactionPage] = useState(0);
+    const [transactionPage, setTransactionPage] = useState(1);
+
     useEffect(() => {
         const token = sessionStorage.getItem("token");
         if (!token || token === "") {
             router.push("/login");
         }
 
-        getTransactions().then((value) => {
+        getTotalTransaction().then((value) => {
+            setTotalTransactionPage(Math.ceil(value/PAGE_SIZE.TRANSACTION))
+        })
+
+        const transactionPagin = calculatePagination(PAGE_SIZE.TRANSACTION, transactionPage)
+
+        getTransactions(transactionPagin.start, transactionPagin.end).then((value) => {
             const transactionsDisplay: TransactionDisplay[] = [];
 
             // @ts-expect-error: I know, I know
@@ -316,6 +331,32 @@ export default function PermanentDrawerLeft() {
         setTriggerReload(!triggerReload);
     };
 
+    const handleTransactionPageChange = (event: React.ChangeEvent<unknown>, page: number) => {
+        let paginRange = calculatePagination(PAGE_SIZE.TRANSACTION, page)
+        getTransactions(paginRange.start, paginRange.end).then((value) => {
+            const transactionsDisplay: TransactionDisplay[] = [];
+
+            // @ts-expect-error: I know, I know
+            value.forEach((element) => {
+                const transaction: TransactionDisplay = {
+                    issue_date: renderDatetime(element.issue_at)!,
+                    wallet: element.wallet,
+                    is_income: element.is_income,
+                    amount: element.amount,
+                    category: element.category,
+                    subcategory: element.subcategory,
+                    detail: element.detail,
+                    status_id: element.status_id,
+                };
+                transactionsDisplay.push(transaction);
+            });
+
+            setTransactions(transactionsDisplay);
+        });
+
+        setTransactionPage(page)
+    };
+
     return (
         <Box sx={{ display: "flex" }}>
             <AppBar
@@ -425,6 +466,14 @@ export default function PermanentDrawerLeft() {
                                 Add Switch Transaction
                             </Button>
                         </Stack>
+                        <Box sx={{ ml: "auto" }}>
+                            <Pagination
+                                count={totalTransactionPage}
+                                page={transactionPage}
+                                color="primary"
+                                onChange={handleTransactionPageChange}
+                            />
+                        </Box>
                     </Toolbar>
                     <Box>
                         <Divider />

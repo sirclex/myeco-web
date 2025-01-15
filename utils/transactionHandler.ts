@@ -48,9 +48,25 @@ async function addTransactionWithDebt(
     });
 }
 
-async function getTransactions() {
+async function getTransactions(offset: number, limit: number) {
     const response = await axios.get(
         process.env.NEXT_PUBLIC_API_URL + "/transaction",
+        {
+            headers: {
+                Authorization: `Bearer ${process.env.NEXT_PUBLIC_API_KEY}`,
+            },
+            params: {
+                offset: offset,
+                limit: 1000
+            }
+        }
+    );
+    return response.data;
+}
+
+async function getTotalTransaction() {
+    const response = await axios.get(
+        process.env.NEXT_PUBLIC_API_URL + "/transaction/total",
         {
             headers: {
                 Authorization: `Bearer ${process.env.NEXT_PUBLIC_API_KEY}`,
@@ -60,5 +76,5 @@ async function getTransactions() {
     return response.data;
 }
 
-export { getTransactions, addTransactionWithDebt };
+export { getTransactions, addTransactionWithDebt, getTotalTransaction };
 export type { TransactionModel, DebtModel, TransactionDisplay };

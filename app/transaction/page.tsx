@@ -210,6 +210,16 @@ export default function PermanentDrawerLeft() {
             router.push("/login");
         }
 
+        fetchPendingDebtList().then((value) => setPendingDebts(value));
+
+        fetchAllDebtList().then((value) => setDebts(value));
+
+        fetchIdentityList().then((value) => setIdentities(value));
+
+        fetchCategory().then((value) => setCategories(value));
+    }, [triggerReload, router]);
+
+    useEffect(() => {
         getTotalTransaction().then((value) => {
             setTotalTransactionPage(Math.ceil(value/PAGE_SIZE.TRANSACTION))
         })
@@ -236,15 +246,7 @@ export default function PermanentDrawerLeft() {
 
             setTransactions(transactionsDisplay);
         });
-
-        fetchPendingDebtList().then((value) => setPendingDebts(value));
-
-        fetchAllDebtList().then((value) => setDebts(value));
-
-        fetchIdentityList().then((value) => setIdentities(value));
-
-        fetchCategory().then((value) => setCategories(value));
-    }, [triggerReload, router, transactionPage]);
+    }, [transactionPage])
 
     const handleAddTransaction = () => {
         router.push("/transaction/create");

@@ -12,10 +12,12 @@ import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
+import Pagination from "@mui/material/Pagination";
 import { useEffect, useState } from "react";
 
 import {
     getTransactions,
+    getTotalTransaction,
     TransactionDisplay,
 } from "@/utils/transactionHandler";
 
@@ -65,6 +67,9 @@ import {
     CategoryOutlined,
 } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
+
+import { PAGE_SIZE } from "@/utils/constants";
+import { calculatePagination } from "@/utils/calcPagination";
 
 const drawerWidth = 240;
 
@@ -195,13 +200,33 @@ export default function PermanentDrawerLeft() {
     const [creatingSubcategory, setCreatingSubcategory] = useState(false);
     const [newSubcategoryName, setNewSubcategoryName] = useState("");
 
+    // Pagination
+    const [totalTransactionPage, setTotalTransactionPage] = useState(0);
+    const [transactionPage, setTransactionPage] = useState(1);
+
     useEffect(() => {
         const token = sessionStorage.getItem("token");
         if (!token || token === "") {
             router.push("/login");
         }
 
-        getTransactions().then((value) => {
+        fetchPendingDebtList().then((value) => setPendingDebts(value));
+
+        fetchAllDebtList().then((value) => setDebts(value));
+
+        fetchIdentityList().then((value) => setIdentities(value));
+
+        fetchCategory().then((value) => setCategories(value));
+    }, [triggerReload, router]);
+
+    useEffect(() => {
+        getTotalTransaction().then((value) => {
+            setTotalTransactionPage(Math.ceil(value/PAGE_SIZE.TRANSACTION))
+        })
+
+        const transactionPagin = calculatePagination(PAGE_SIZE.TRANSACTION, transactionPage)
+
+        getTransactions(transactionPagin.start, transactionPagin.end).then((value) => {
             const transactionsDisplay: TransactionDisplay[] = [];
 
             // @ts-expect-error: I know, I know
@@ -221,15 +246,7 @@ export default function PermanentDrawerLeft() {
 
             setTransactions(transactionsDisplay);
         });
-
-        fetchPendingDebtList().then((value) => setPendingDebts(value));
-
-        fetchAllDebtList().then((value) => setDebts(value));
-
-        fetchIdentityList().then((value) => setIdentities(value));
-
-        fetchCategory().then((value) => setCategories(value));
-    }, [triggerReload, router]);
+    }, [transactionPage])
 
     const handleAddTransaction = () => {
         router.push("/transaction/create");
@@ -314,6 +331,10 @@ export default function PermanentDrawerLeft() {
         setNewSubcategoryName("");
         handleCloseCreateSubcategory();
         setTriggerReload(!triggerReload);
+    };
+
+    const handleTransactionPageChange = (event: React.ChangeEvent<unknown>, page: number) => {
+        setTransactionPage(page)
     };
 
     return (
@@ -425,6 +446,14 @@ export default function PermanentDrawerLeft() {
                                 Add Switch Transaction
                             </Button>
                         </Stack>
+                        <Box sx={{ ml: "auto" }}>
+                            <Pagination
+                                count={totalTransactionPage}
+                                page={transactionPage}
+                                color="primary"
+                                onChange={handleTransactionPageChange}
+                            />
+                        </Box>
                     </Toolbar>
                     <Box>
                         <Divider />
